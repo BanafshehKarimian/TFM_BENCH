@@ -43,10 +43,13 @@ def evaluate(
     return_predictions=False,
     tabpfn_token=None,
 ):
+    
+    if tabpfn_token:
+        import os
+        os.environ["TABPFN_TOKEN"] = tabpfn_token #https://ux.priorlabs.ai/accept-license?hf_repo_id=tabpfn_3
     model_kwargs = model_kwargs or {}
 
     model = create_model(
-        tabpfn_token=tabpfn_token,
         model_name=model_name,
         task=data.task,
         device=device,
