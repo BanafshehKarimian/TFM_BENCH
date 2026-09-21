@@ -41,6 +41,7 @@ def evaluate(
     seed=42,
     model_kwargs=None,
     return_predictions=False,
+    *wargs,
 ):
     model_kwargs = model_kwargs or {}
 
@@ -49,6 +50,7 @@ def evaluate(
         task=data.task,
         device=device,
         seed=seed,
+        *wargs,
         **model_kwargs,
     )
 

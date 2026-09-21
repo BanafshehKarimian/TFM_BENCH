@@ -17,6 +17,7 @@ def create_model(
     task: str,
     device: str,
     seed: int,
+    *wargs, 
     **kwargs,
 ):
     name = model_name.lower()
@@ -38,6 +39,7 @@ def create_model(
             version=version,
             device=device,
             seed=seed,
+            *wargs,
             **kwargs,
         )
 
@@ -45,5 +47,6 @@ def create_model(
         task=task,
         device=device,
         seed=seed,
+        *wargs, 
         **kwargs,
     )
