@@ -10,14 +10,14 @@ MODEL_REGISTRY = {
 }
 
 def get_supported():
-    print(f"Supported models are: {MODEL_REGISTRY.keys()}")
+    print(f"Supported models are: {MODEL_REGISTRY.keys}")
 
 def create_model(
     model_name: str,
     task: str,
     device: str,
     seed: int,
-    *wargs, 
+    tabpfn_token: str,
     **kwargs,
 ):
     name = model_name.lower()
@@ -39,14 +39,13 @@ def create_model(
             version=version,
             device=device,
             seed=seed,
-            *wargs,
             **kwargs,
         )
 
     return cls(
+        tabpfn_token=tabpfn_token,
         task=task,
         device=device,
         seed=seed,
-        *wargs, 
         **kwargs,
     )

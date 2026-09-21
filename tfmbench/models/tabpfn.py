@@ -8,7 +8,7 @@ class TabPFNAdapter(BaseTFM):
         task,
         device="cuda",
         seed=42,
-        TABPFN_TOKEN=None,
+        tabpfn_token=None,
         **kwargs,
     ):
         super().__init__(
@@ -19,9 +19,9 @@ class TabPFNAdapter(BaseTFM):
         )
 
         from tabpfn import TabPFNClassifier, TabPFNRegressor
-        if TABPFN_TOKEN:
+        if tabpfn_token:
             import os
-            os.environ["TABPFN_TOKEN"] = TABPFN_TOKEN
+            os.environ["tabpfn_token"] = tabpfn_token
 
         if task == "classification":
             self._model = TabPFNClassifier(

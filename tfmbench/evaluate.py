@@ -41,16 +41,16 @@ def evaluate(
     seed=42,
     model_kwargs=None,
     return_predictions=False,
-    *wargs,
+    tabpfn_token=None,
 ):
     model_kwargs = model_kwargs or {}
 
     model = create_model(
+        tabpfn_token=tabpfn_token,
         model_name=model_name,
         task=data.task,
         device=device,
         seed=seed,
-        *wargs,
         **model_kwargs,
     )
 
