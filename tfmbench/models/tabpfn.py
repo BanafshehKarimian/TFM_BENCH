@@ -37,7 +37,7 @@ class TabPFNAdapter(BaseTFM):
 
 
     def fit(self, X, y):
-        os.environ["tabpfn_token"] = self.tabpfn_token
+        os.environ["TABPFN_TOKEN"] = self.tabpfn_token
         self._model.fit(X, y)
         return self
 
