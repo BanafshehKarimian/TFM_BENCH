@@ -1,5 +1,5 @@
 from .base import BaseTFM
-
+import os
 
 class TabPFNAdapter(BaseTFM):
 
@@ -19,9 +19,6 @@ class TabPFNAdapter(BaseTFM):
         )
 
         from tabpfn import TabPFNClassifier, TabPFNRegressor
-        if tabpfn_token:
-            import os
-            os.environ["TABPFN_TOKEN"] = tabpfn_token
 
         if task == "classification":
             self._model = TabPFNClassifier(
@@ -40,6 +37,7 @@ class TabPFNAdapter(BaseTFM):
 
 
     def fit(self, X, y):
+        os.environ["TABPFN_TOKEN"] = self.tabpfn_token
         self._model.fit(X, y)
         return self
 
