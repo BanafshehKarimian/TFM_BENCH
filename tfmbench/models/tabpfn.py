@@ -21,7 +21,7 @@ class TabPFNAdapter(BaseTFM):
         from tabpfn import TabPFNClassifier, TabPFNRegressor
         if tabpfn_token:
             import os
-            os.environ["TABPFN_TOKEN"] = tabpfn_token
+            os.environ["TABPFN_TOKEN"] = tabpfn_token #https://ux.priorlabs.ai/accept-license?hf_repo_id=tabpfn_3
 
         if task == "classification":
             self._model = TabPFNClassifier(
