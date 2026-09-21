@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from tfmbench.data import TabularDataset
+from tfmbench.datasets import BaseTabularDataset as TabularDataset
 
 
 def _load_split(dataset_dir, split):
