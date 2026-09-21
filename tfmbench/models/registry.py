@@ -60,15 +60,8 @@ MODEL_REGISTRY = {
         TabICLAdapter,
         {"version": "v2"},
     ),
-    "tabdpt_v1.3": (
-        TabDPTAdapter,
-        {},
-    ),
-
-    "tabdpt": (
-        TabDPTAdapter,
-        {},
-    ),
+    #"tabdpt_v1.3": (TabDPTAdapter,{}),
+    #"tabdpt": (TabDPTAdapter,{},),
 }
 
 
