@@ -36,7 +36,6 @@ def benchmark_models(
 
         row = {
             "model": model_name,
-            "status": "ok",
             "n_train": result.n_train,
             "n_test": result.n_test,
             "n_features": result.n_features,
