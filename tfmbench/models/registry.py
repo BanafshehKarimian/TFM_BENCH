@@ -9,6 +9,8 @@ MODEL_REGISTRY = {
     "tabicl_v2": TabICLAdapter,
 }
 
+def get_supported():
+    print(f"Supported models are: {MODEL_REGISTRY.keys()}")
 
 def create_model(
     model_name: str,
