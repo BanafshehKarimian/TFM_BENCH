@@ -1,5 +1,5 @@
 from .base import BaseTFM
-import os
+
 
 class TabPFNAdapter(BaseTFM):
 
@@ -19,6 +19,9 @@ class TabPFNAdapter(BaseTFM):
         )
 
         from tabpfn import TabPFNClassifier, TabPFNRegressor
+        if tabpfn_token:
+            import os
+            os.environ["TABPFN_TOKEN"] = tabpfn_token
 
         if task == "classification":
             self._model = TabPFNClassifier(
@@ -34,26 +37,9 @@ class TabPFNAdapter(BaseTFM):
                 **kwargs,
             )
         self.tabpfn_token = tabpfn_token
-        import os
-
-        from tabpfn.browser_auth import get_cached_token, verify_token
-        from tabpfn.settings import settings
-
-        print("env exists:", bool(os.environ.get("TABPFN_TOKEN")))
-
-        token = get_cached_token()
-        print("TabPFN sees token:", token is not None)
-        print(
-                "token valid:",
-                verify_token(
-                    "tabpfn_sk_oIa-pBgg3FDBGrM95bfSAh-18ypWp8FCvhQ_Bzg3nec",
-                    settings.tabpfn.auth_api_url,
-                ),
-            )
 
 
     def fit(self, X, y):
-        os.environ["TABPFN_TOKEN"] = self.tabpfn_token
         self._model.fit(X, y)
         return self
 
