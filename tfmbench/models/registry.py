@@ -1,7 +1,7 @@
 from .tabpfn import TabPFNAdapter
 from .tabicl import TabICLAdapter
 from .gbdt import XGBoostAdapter, CatBoostAdapter
-
+from .tabdpt import TabDPTAdapter
 
 MODEL_REGISTRY = {
 
@@ -59,6 +59,15 @@ MODEL_REGISTRY = {
     "tabicl_v2": (
         TabICLAdapter,
         {"version": "v2"},
+    ),
+    "tabdpt_v1.3": (
+        TabDPTAdapter,
+        {},
+    ),
+
+    "tabdpt": (
+        TabDPTAdapter,
+        {},
     ),
 }
 
