@@ -18,7 +18,7 @@ class XGBoostAdapter(BaseTFM):
 
         from xgboost import XGBClassifier, XGBRegressor
 
-        xgb_device = device 
+        xgb_device = "GPU" if device.type=="cuda" else "CPU" 
 
         common_kwargs = {
             "random_state": seed,
@@ -72,7 +72,7 @@ class CatBoostAdapter(BaseTFM):
             "allow_writing_files": False,
         }
 
-        if device.startswith("cuda"):
+        if device.type=="cuda":
             common_kwargs["task_type"] = "GPU"
 
             # cuda:0 -> devices="0"

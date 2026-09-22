@@ -118,11 +118,12 @@ def evaluate(
 
     peak_gpu_memory_mb = None
 
-    if use_cuda:
+    if device.type == 'cuda':
         peak_gpu_memory_mb = (
             torch.cuda.max_memory_allocated()
             / 1024**2
-        )
+        )#fix for gpu and mps?
+        
 
     return EvalResult(
         model_name=model_name,
