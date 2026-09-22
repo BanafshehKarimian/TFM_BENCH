@@ -15,7 +15,7 @@ from .models.registry import create_model
 @dataclass
 class EvalResult:
     model_name: str
-    dataset_name: str | None
+    dataset_name: str 
     task: str
 
     n_train: int
@@ -27,7 +27,7 @@ class EvalResult:
     fit_seconds: float
     predict_seconds: float
 
-    peak_gpu_memory_mb: float | None
+    peak_gpu_memory_mb: float 
 
     predictions: Any = None
     probabilities: Any = None
@@ -57,16 +57,14 @@ def evaluate(
         **model_kwargs,
     )
 
-    use_cuda = (
-        device.startswith("cuda")
-        and torch.cuda.is_available()
-    )
 
-    if use_cuda:
+    if device.type == 'cuda':
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
         torch.cuda.synchronize()
-
+    elif device.type == 'mps':
+        torch.mps.empty_cache()
+        torch.mps.synchronize()
 
     start = time.perf_counter()
 
@@ -75,13 +73,17 @@ def evaluate(
         data.y_train,
     )
 
-    if use_cuda:
+    if device.type == 'cuda':
         torch.cuda.synchronize()
+    elif device.type == 'mps':
+        torch.mps.synchronize()
 
     fit_seconds = time.perf_counter() - start
     
-    if use_cuda:
+    if device.type == 'cuda':
         torch.cuda.synchronize()
+    elif device.type == 'mps':
+        torch.mps.synchronize()
 
     start = time.perf_counter()
 
@@ -89,8 +91,10 @@ def evaluate(
         data.X_test
     )
 
-    if use_cuda:
+    if device.type == 'cuda':
         torch.cuda.synchronize()
+    elif device.type == 'mps':
+        torch.mps.synchronize()
 
     predict_seconds = time.perf_counter() - start
 

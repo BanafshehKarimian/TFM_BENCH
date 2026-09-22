@@ -18,7 +18,7 @@ class XGBoostAdapter(BaseTFM):
 
         from xgboost import XGBClassifier, XGBRegressor
 
-        xgb_device = device if device.startswith("cuda") else "cpu"
+        xgb_device = device 
 
         common_kwargs = {
             "random_state": seed,

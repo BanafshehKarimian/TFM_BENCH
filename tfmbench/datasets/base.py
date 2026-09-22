@@ -13,7 +13,7 @@ class BaseTabularDataset:
     y_test: Any
 
     task: TaskType
-    name: str | None = None
+    name: str 
 
     @property
     def n_train(self) -> int:
