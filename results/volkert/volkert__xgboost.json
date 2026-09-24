@@ -1,0 +1,9 @@
+{
+  "dataset": "volkert",
+  "model": "xgboost",
+  "job_id": 180,
+  "status": "failed",
+  "error_type": "ValueError",
+  "error": "Invalid classes inferred from unique values of `y`.  Expected: [0 1 2 3 4 5 6 7 8 9], got ['0' '1' '2' '3' '4' '5' '6' '7' '8' '9']",
+  "traceback": "Traceback (most recent call last):\n  File \"/lustre06/project/6004986/banafsh7/TFM_BENCH/run_pair.py\", line 125, in main\n    result = evaluate(\n             ^^^^^^^^^\n  File \"/lustre06/project/6004986/banafsh7/TFM_BENCH/tfmbench/evaluate.py\", line 71, in evaluate\n    model.fit(\n  File \"/lustre06/project/6004986/banafsh7/TFM_BENCH/tfmbench/models/gbdt.py\", line 40, in fit\n    self._model.fit(X, y)\n  File \"/scratch/banafsh7/py311_tfm/lib/python3.11/site-packages/xgboost/core.py\", line 751, in inner_f\n    return func(**kwargs)\n           ^^^^^^^^^^^^^^\n  File \"/scratch/banafsh7/py311_tfm/lib/python3.11/site-packages/xgboost/sklearn.py\", line 1761, in fit\n    raise ValueError(\nValueError: Invalid classes inferred from unique values of `y`.  Expected: [0 1 2 3 4 5 6 7 8 9], got ['0' '1' '2' '3' '4' '5' '6' '7' '8' '9']\n"
+}

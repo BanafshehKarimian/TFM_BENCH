@@ -1,0 +1,17 @@
+{
+  "dataset": "volkert",
+  "model": "catboost",
+  "job_id": 181,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.693363059509518,
+    "balanced_accuracy": 0.6131510392875449,
+    "f1_macro": 0.6439124530961731,
+    "roc_auc": 0.9401335531579982,
+    "log_loss": 0.8599178779268788
+  },
+  "fit_seconds": 7.237764511024579,
+  "predict_seconds": 0.023340472020208836,
+  "wall_seconds": 7.700204372406006,
+  "peak_gpu_memory_mb": 0.0
+}

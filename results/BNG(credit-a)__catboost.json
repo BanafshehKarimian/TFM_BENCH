@@ -1,0 +1,17 @@
+{
+  "dataset": "BNG(credit-a)",
+  "model": "catboost",
+  "job_id": 73,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.91036,
+    "balanced_accuracy": 0.9088579643258458,
+    "f1_macro": 0.9092196235930111,
+    "roc_auc": 0.970292161977563,
+    "log_loss": 0.21935988101749773
+  },
+  "fit_seconds": 6.258439696859568,
+  "predict_seconds": 0.31200648890808225,
+  "wall_seconds": 9.07345461845398,
+  "peak_gpu_memory_mb": 0.0
+}

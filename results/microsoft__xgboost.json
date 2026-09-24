@@ -1,0 +1,15 @@
+{
+  "dataset": "microsoft",
+  "model": "xgboost",
+  "job_id": 36,
+  "status": "success",
+  "metrics": {
+    "rmse": 0.7696674826617546,
+    "mae": 0.5951525568962097,
+    "r2": 0.1457223892211914
+  },
+  "fit_seconds": 5.855314166052267,
+  "predict_seconds": 0.43442459194920957,
+  "wall_seconds": 7.403519630432129,
+  "peak_gpu_memory_mb": 0.0
+}

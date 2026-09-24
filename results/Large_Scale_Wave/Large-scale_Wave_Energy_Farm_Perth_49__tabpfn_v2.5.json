@@ -1,0 +1,15 @@
+{
+  "dataset": "Large-scale_Wave_Energy_Farm_Perth_49",
+  "model": "tabpfn_v2.5",
+  "job_id": 198,
+  "status": "success",
+  "metrics": {
+    "rmse": 6400.125769828674,
+    "mae": 2981.479225967545,
+    "r2": 0.9973053806854459
+  },
+  "fit_seconds": 5.486304690130055,
+  "predict_seconds": 36.77370355487801,
+  "wall_seconds": 55.45445680618286,
+  "peak_gpu_memory_mb": 8598.83935546875
+}

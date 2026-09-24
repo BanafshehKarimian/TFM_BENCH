@@ -1,0 +1,17 @@
+{
+  "dataset": "Fashion-MNIST",
+  "model": "xgboost",
+  "job_id": 156,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9043571428571429,
+    "balanced_accuracy": 0.9043571428571427,
+    "f1_macro": 0.9039044788919677,
+    "roc_auc": 0.993946034580499,
+    "log_loss": 0.3343080855490583
+  },
+  "fit_seconds": 23.04165550111793,
+  "predict_seconds": 0.42304385895840824,
+  "wall_seconds": 25.177605152130127,
+  "peak_gpu_memory_mb": 0.0
+}

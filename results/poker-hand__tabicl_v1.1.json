@@ -1,0 +1,17 @@
+{
+  "dataset": "poker-hand",
+  "model": "tabicl_v1.1",
+  "job_id": 51,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.8563184749417079,
+    "balanced_accuracy": 0.26583696811178215,
+    "f1_macro": 0.26967534983194585,
+    "roc_auc": 0.8603301666654987,
+    "log_loss": 0.398255313906414
+  },
+  "fit_seconds": 17.719328617909923,
+  "predict_seconds": 611.7391293859109,
+  "wall_seconds": 1234.2780029773712,
+  "peak_gpu_memory_mb": 18718.4521484375
+}

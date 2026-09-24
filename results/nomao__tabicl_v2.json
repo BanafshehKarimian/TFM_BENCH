@@ -1,0 +1,17 @@
+{
+  "dataset": "nomao",
+  "model": "tabicl_v2",
+  "job_id": 208,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9677934136080081,
+    "balanced_accuracy": 0.9637420224693142,
+    "f1_macro": 0.960790952519071,
+    "roc_auc": 0.9948846127981273,
+    "log_loss": 0.08419004898618908
+  },
+  "fit_seconds": 4.686199516057968,
+  "predict_seconds": 6.362693546805531,
+  "wall_seconds": 17.395538568496704,
+  "peak_gpu_memory_mb": 27101.9697265625
+}

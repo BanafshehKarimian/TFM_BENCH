@@ -1,0 +1,17 @@
+{
+  "dataset": "fabert",
+  "model": "catboost",
+  "job_id": 241,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.7087378640776699,
+    "balanced_accuracy": 0.6793224121006396,
+    "f1_macro": 0.6901840048588656,
+    "roc_auc": 0.9252952283873496,
+    "log_loss": 0.9156836010950964
+  },
+  "fit_seconds": 7.224991549970582,
+  "predict_seconds": 0.022715380880981684,
+  "wall_seconds": 8.28428602218628,
+  "peak_gpu_memory_mb": 0.0
+}

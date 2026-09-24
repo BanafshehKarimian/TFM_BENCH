@@ -1,0 +1,15 @@
+{
+  "dataset": "yahoo",
+  "model": "tabpfn_v3.5",
+  "job_id": 105,
+  "status": "success",
+  "metrics": {
+    "rmse": 0.7319328608391511,
+    "mae": 0.569622814655304,
+    "r2": 0.44495731592178345
+  },
+  "fit_seconds": 46.882375021930784,
+  "predict_seconds": 2282.7028195881285,
+  "wall_seconds": 2393.670323610306,
+  "peak_gpu_memory_mb": 27908.80078125
+}

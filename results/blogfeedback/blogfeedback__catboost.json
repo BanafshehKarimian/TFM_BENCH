@@ -1,0 +1,15 @@
+{
+  "dataset": "blogfeedback",
+  "model": "catboost",
+  "job_id": 169,
+  "status": "success",
+  "metrics": {
+    "rmse": 20.687485062628717,
+    "mae": 5.407964994136926,
+    "r2": 0.6366188027248565
+  },
+  "fit_seconds": 10.874653967795894,
+  "predict_seconds": 0.03399407700635493,
+  "wall_seconds": 11.19611120223999,
+  "peak_gpu_memory_mb": 0.0
+}

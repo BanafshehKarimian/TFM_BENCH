@@ -1,0 +1,15 @@
+{
+  "dataset": "Large-scale_Wave_Energy_Farm_Perth_49",
+  "model": "xgboost",
+  "job_id": 192,
+  "status": "success",
+  "metrics": {
+    "rmse": 7064.3951367012505,
+    "mae": 2867.472790955755,
+    "r2": 0.9967170038966398
+  },
+  "fit_seconds": 2.7718807118944824,
+  "predict_seconds": 0.24864179315045476,
+  "wall_seconds": 6.268515110015869,
+  "peak_gpu_memory_mb": 0.0
+}

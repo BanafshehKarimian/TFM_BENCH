@@ -1,0 +1,15 @@
+{
+  "dataset": "blogfeedback",
+  "model": "tabpfn_v2.6",
+  "job_id": 175,
+  "status": "success",
+  "metrics": {
+    "rmse": 25.621280336565352,
+    "mae": 5.223123365383081,
+    "r2": 0.44262342428611856
+  },
+  "fit_seconds": 24.230346709955484,
+  "predict_seconds": 224.37509747804143,
+  "wall_seconds": 249.77345895767212,
+  "peak_gpu_memory_mb": 24924.14990234375
+}

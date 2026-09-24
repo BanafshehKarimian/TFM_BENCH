@@ -1,0 +1,17 @@
+{
+  "dataset": "Fashion-MNIST",
+  "model": "catboost",
+  "job_id": 157,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.892,
+    "balanced_accuracy": 0.892,
+    "f1_macro": 0.891743481287957,
+    "roc_auc": 0.9926871825396827,
+    "log_loss": 0.29305465143838527
+  },
+  "fit_seconds": 20.59490993898362,
+  "predict_seconds": 0.05413380591198802,
+  "wall_seconds": 21.56949734687805,
+  "peak_gpu_memory_mb": 0.0
+}

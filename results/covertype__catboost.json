@@ -1,0 +1,17 @@
+{
+  "dataset": "covertype",
+  "model": "catboost",
+  "job_id": 121,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9314217360997564,
+    "balanced_accuracy": 0.8938551850367221,
+    "f1_macro": 0.9040561611777479,
+    "roc_auc": 0.9953522602806819,
+    "log_loss": 0.18823032152275812
+  },
+  "fit_seconds": 9.117110252846032,
+  "predict_seconds": 0.8110371918883175,
+  "wall_seconds": 12.419318199157715,
+  "peak_gpu_memory_mb": 0.0
+}

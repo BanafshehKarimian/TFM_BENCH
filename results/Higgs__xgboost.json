@@ -1,0 +1,17 @@
+{
+  "dataset": "Higgs",
+  "model": "xgboost",
+  "job_id": 60,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.73699,
+    "balanced_accuracy": 0.7355133353804717,
+    "f1_macro": 0.735743152662673,
+    "roc_auc": 0.8175772916459043,
+    "log_loss": 0.5286695394062553
+  },
+  "fit_seconds": 5.373835362959653,
+  "predict_seconds": 0.12378556909970939,
+  "wall_seconds": 33.908291816711426,
+  "peak_gpu_memory_mb": 0.0
+}

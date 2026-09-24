@@ -1,0 +1,15 @@
+{
+  "dataset": "Large-scale_Wave_Energy_Farm_Perth_49",
+  "model": "catboost",
+  "job_id": 193,
+  "status": "success",
+  "metrics": {
+    "rmse": 8853.004194637779,
+    "mae": 6348.303149549044,
+    "r2": 0.9948441325767311
+  },
+  "fit_seconds": 11.797056729206815,
+  "predict_seconds": 0.01804188801907003,
+  "wall_seconds": 14.289519548416138,
+  "peak_gpu_memory_mb": 0.0
+}

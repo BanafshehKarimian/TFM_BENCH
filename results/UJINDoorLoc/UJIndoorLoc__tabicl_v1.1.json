@@ -1,0 +1,9 @@
+{
+  "dataset": "UJIndoorLoc",
+  "model": "tabicl_v1.1",
+  "job_id": 219,
+  "status": "failed",
+  "error_type": "ValueError",
+  "error": "Regression: v2",
+  "traceback": "Traceback (most recent call last):\n  File \"/lustre06/project/6004986/banafsh7/TFM_BENCH/run_pair.py\", line 125, in main\n    result = evaluate(\n             ^^^^^^^^^\n  File \"/lustre06/project/6004986/banafsh7/TFM_BENCH/tfmbench/evaluate.py\", line 52, in evaluate\n    model = create_model(\n            ^^^^^^^^^^^^^\n  File \"/lustre06/project/6004986/banafsh7/TFM_BENCH/tfmbench/models/registry.py\", line 92, in create_model\n    return cls(\n           ^^^^\n  File \"/lustre06/project/6004986/banafsh7/TFM_BENCH/tfmbench/models/tabicl.py\", line 42, in __init__\n    raise ValueError(\nValueError: Regression: v2\n"
+}

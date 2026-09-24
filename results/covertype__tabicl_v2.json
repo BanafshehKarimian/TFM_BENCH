@@ -1,0 +1,17 @@
+{
+  "dataset": "covertype",
+  "model": "tabicl_v2",
+  "job_id": 124,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.973881913547843,
+    "balanced_accuracy": 0.9516773449134259,
+    "f1_macro": 0.9534523976997052,
+    "roc_auc": 0.9991128448313427,
+    "log_loss": 0.06465528876367248
+  },
+  "fit_seconds": 21.793025634018704,
+  "predict_seconds": 262.0366782541387,
+  "wall_seconds": 544.6286253929138,
+  "peak_gpu_memory_mb": 20072.3486328125
+}

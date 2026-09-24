@@ -1,0 +1,17 @@
+{
+  "dataset": "Smoking_and_Drinking_Dataset_with_body_signal",
+  "model": "tabpfn_v3.5_fast",
+  "job_id": 94,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.7405961567559388,
+    "balanced_accuracy": 0.7405972199575345,
+    "f1_macro": 0.7405944404068703,
+    "roc_auc": 0.824749273792243,
+    "log_loss": 0.510338385451052
+  },
+  "fit_seconds": 7.6141767730005085,
+  "predict_seconds": 462.63321706908755,
+  "wall_seconds": 932.7544257640839,
+  "peak_gpu_memory_mb": 19875.12255859375
+}

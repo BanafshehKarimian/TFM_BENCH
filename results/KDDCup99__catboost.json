@@ -1,0 +1,9 @@
+{
+  "dataset": "KDDCup99",
+  "model": "catboost",
+  "job_id": 13,
+  "status": "failed",
+  "error_type": "ValueError",
+  "error": "Number of classes in y_true not equal to the number of columns in 'y_score'",
+  "traceback": "Traceback (most recent call last):\n  File \"/lustre06/project/6004986/banafsh7/TFM_BENCH/run_pair.py\", line 125, in main\n    result = evaluate(\n             ^^^^^^^^^\n  File \"/lustre06/project/6004986/banafsh7/TFM_BENCH/tfmbench/evaluate.py\", line 107, in evaluate\n    metrics = classification_metrics(\n              ^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/lustre06/project/6004986/banafsh7/TFM_BENCH/tfmbench/metrics.py\", line 42, in classification_metrics\n    results[\"roc_auc\"] = roc_auc_score(\n                         ^^^^^^^^^^^^^^\n  File \"/scratch/banafsh7/py311_tfm/lib/python3.11/site-packages/sklearn/utils/_param_validation.py\", line 218, in wrapper\n    return func(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^\n  File \"/scratch/banafsh7/py311_tfm/lib/python3.11/site-packages/sklearn/metrics/_ranking.py\", line 698, in roc_auc_score\n    return _multiclass_roc_auc_score(\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/scratch/banafsh7/py311_tfm/lib/python3.11/site-packages/sklearn/metrics/_ranking.py\", line 815, in _multiclass_roc_auc_score\n    raise ValueError(\nValueError: Number of classes in y_true not equal to the number of columns in 'y_score'\n"
+}

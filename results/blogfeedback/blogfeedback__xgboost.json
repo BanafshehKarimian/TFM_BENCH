@@ -1,0 +1,15 @@
+{
+  "dataset": "blogfeedback",
+  "model": "xgboost",
+  "job_id": 168,
+  "status": "success",
+  "metrics": {
+    "rmse": 23.297890196827943,
+    "mae": 5.5212524386457185,
+    "r2": 0.5391280838309509
+  },
+  "fit_seconds": 2.529999015852809,
+  "predict_seconds": 0.042164291953668,
+  "wall_seconds": 2.900691032409668,
+  "peak_gpu_memory_mb": 0.0
+}

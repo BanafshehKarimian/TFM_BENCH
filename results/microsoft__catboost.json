@@ -1,0 +1,15 @@
+{
+  "dataset": "microsoft",
+  "model": "catboost",
+  "job_id": 37,
+  "status": "success",
+  "metrics": {
+    "rmse": 0.7455965895730684,
+    "mae": 0.5813350891648754,
+    "r2": 0.19832094759157548
+  },
+  "fit_seconds": 5.2298121731728315,
+  "predict_seconds": 0.06374899996444583,
+  "wall_seconds": 6.699364423751831,
+  "peak_gpu_memory_mb": 0.0
+}

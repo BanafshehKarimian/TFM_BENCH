@@ -1,0 +1,17 @@
+{
+  "dataset": "nomao",
+  "model": "tabpfn_v2.6",
+  "job_id": 211,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9715653561584215,
+    "balanced_accuracy": 0.9639438716845468,
+    "f1_macro": 0.9650776309983031,
+    "roc_auc": 0.9960722432471794,
+    "log_loss": 0.07224981552709721
+  },
+  "fit_seconds": 4.998167657991871,
+  "predict_seconds": 36.52751928195357,
+  "wall_seconds": 79.01290726661682,
+  "peak_gpu_memory_mb": 2775.021484375
+}

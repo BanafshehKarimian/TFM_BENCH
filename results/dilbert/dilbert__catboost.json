@@ -1,0 +1,17 @@
+{
+  "dataset": "dilbert",
+  "model": "catboost",
+  "job_id": 229,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.987,
+    "balanced_accuracy": 0.9870598589727531,
+    "f1_macro": 0.987053604425369,
+    "roc_auc": 0.9996797571695307,
+    "log_loss": 0.06948582479889999
+  },
+  "fit_seconds": 23.74347423692234,
+  "predict_seconds": 0.05769809405319393,
+  "wall_seconds": 25.051395416259766,
+  "peak_gpu_memory_mb": 0.0
+}

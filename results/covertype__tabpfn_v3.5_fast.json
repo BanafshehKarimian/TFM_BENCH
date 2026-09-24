@@ -1,0 +1,17 @@
+{
+  "dataset": "covertype",
+  "model": "tabpfn_v3.5_fast",
+  "job_id": 130,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9792604321747287,
+    "balanced_accuracy": 0.9587674893378099,
+    "f1_macro": 0.9591770277815119,
+    "roc_auc": 0.9993702534306039,
+    "log_loss": 0.05075512121021819
+  },
+  "fit_seconds": 7.222147061023861,
+  "predict_seconds": 183.01565013919026,
+  "wall_seconds": 374.58779859542847,
+  "peak_gpu_memory_mb": 11860.65576171875
+}

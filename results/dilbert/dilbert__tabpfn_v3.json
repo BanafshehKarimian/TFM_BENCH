@@ -1,0 +1,17 @@
+{
+  "dataset": "dilbert",
+  "model": "tabpfn_v3",
+  "job_id": 236,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.999,
+    "balanced_accuracy": 0.9990122493277809,
+    "f1_macro": 0.9990122493277809,
+    "roc_auc": 0.9999990854160442,
+    "log_loss": 0.010023329388637852
+  },
+  "fit_seconds": 0.9480285891331732,
+  "predict_seconds": 4.670689078047872,
+  "wall_seconds": 11.005659580230713,
+  "peak_gpu_memory_mb": 2128.98486328125
+}

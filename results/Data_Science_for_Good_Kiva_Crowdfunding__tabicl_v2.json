@@ -1,0 +1,17 @@
+{
+  "dataset": "Data_Science_for_Good_Kiva_Crowdfunding",
+  "model": "tabicl_v2",
+  "job_id": 112,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9684969569654577,
+    "balanced_accuracy": 0.9417772942514254,
+    "f1_macro": 0.9352827778869139,
+    "roc_auc": 0.9970793588912175,
+    "log_loss": 0.0804848157190979
+  },
+  "fit_seconds": 5.974330410128459,
+  "predict_seconds": 297.87825107597746,
+  "wall_seconds": 605.9266695976257,
+  "peak_gpu_memory_mb": 31180.537109375
+}

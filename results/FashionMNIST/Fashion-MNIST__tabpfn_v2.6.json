@@ -1,0 +1,17 @@
+{
+  "dataset": "Fashion-MNIST",
+  "model": "tabpfn_v2.6",
+  "job_id": 163,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9093571428571429,
+    "balanced_accuracy": 0.9093571428571428,
+    "f1_macro": 0.9089520895312392,
+    "roc_auc": 0.9943611961451247,
+    "log_loss": 0.25137551594907787
+  },
+  "fit_seconds": 66.29062237706967,
+  "predict_seconds": 538.3205589121208,
+  "wall_seconds": 1144.5249853134155,
+  "peak_gpu_memory_mb": 24774.71875
+}

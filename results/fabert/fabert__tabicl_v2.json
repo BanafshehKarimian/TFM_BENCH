@@ -1,0 +1,17 @@
+{
+  "dataset": "fabert",
+  "model": "tabicl_v2",
+  "job_id": 244,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.7057038834951457,
+    "balanced_accuracy": 0.6797558044002863,
+    "f1_macro": 0.6914221885898352,
+    "roc_auc": 0.9351293303345035,
+    "log_loss": 0.764306312729133
+  },
+  "fit_seconds": 11.491030808072537,
+  "predict_seconds": 8.781352604040876,
+  "wall_seconds": 29.73833179473877,
+  "peak_gpu_memory_mb": 31275.1865234375
+}

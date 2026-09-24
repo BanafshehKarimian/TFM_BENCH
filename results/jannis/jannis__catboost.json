@@ -1,0 +1,17 @@
+{
+  "dataset": "jannis",
+  "model": "catboost",
+  "job_id": 145,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.7091419358691109,
+    "balanced_accuracy": 0.5323244900146458,
+    "f1_macro": 0.5393113478855859,
+    "roc_auc": 0.8383281695973973,
+    "log_loss": 0.722919628309784
+  },
+  "fit_seconds": 6.434736303053796,
+  "predict_seconds": 0.02911860984750092,
+  "wall_seconds": 17.787472248077393,
+  "peak_gpu_memory_mb": 0.0
+}

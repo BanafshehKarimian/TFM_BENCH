@@ -1,0 +1,15 @@
+{
+  "dataset": "UJIndoorLoc",
+  "model": "tabpfn_v3",
+  "job_id": 224,
+  "status": "success",
+  "metrics": {
+    "rmse": 6.252558989222529,
+    "mae": 2.9153117873116354,
+    "r2": 0.9974335574504839
+  },
+  "fit_seconds": 1.7569111590273678,
+  "predict_seconds": 17.693495295010507,
+  "wall_seconds": 60.477333545684814,
+  "peak_gpu_memory_mb": 5245.30029296875
+}

@@ -1,0 +1,15 @@
+{
+  "dataset": "UJIndoorLoc",
+  "model": "xgboost",
+  "job_id": 216,
+  "status": "success",
+  "metrics": {
+    "rmse": 10.690777846469533,
+    "mae": 6.106796919786019,
+    "r2": 0.9924970066503439
+  },
+  "fit_seconds": 7.035754767013714,
+  "predict_seconds": 0.25658045802265406,
+  "wall_seconds": 9.169572591781616,
+  "peak_gpu_memory_mb": 0.0
+}

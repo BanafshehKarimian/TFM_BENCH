@@ -1,0 +1,13 @@
+job_id,dataset,model,task,total_rows,train_rows,n_features,profile,cpus,mem_gb,time
+132,CDC_Diabetes_Health_Indicators,xgboost,binclass,253680,162355,21,medium,8,64,02:00:00
+133,CDC_Diabetes_Health_Indicators,catboost,binclass,253680,162355,21,medium,8,64,02:00:00
+134,CDC_Diabetes_Health_Indicators,tabicl_v1,binclass,253680,162355,21,medium,8,64,02:00:00
+135,CDC_Diabetes_Health_Indicators,tabicl_v1.1,binclass,253680,162355,21,medium,8,64,02:00:00
+136,CDC_Diabetes_Health_Indicators,tabicl_v2,binclass,253680,162355,21,medium,8,64,02:00:00
+137,CDC_Diabetes_Health_Indicators,tabpfn_v2,binclass,253680,162355,21,medium,8,64,02:00:00
+138,CDC_Diabetes_Health_Indicators,tabpfn_v2.5,binclass,253680,162355,21,medium,8,64,02:00:00
+139,CDC_Diabetes_Health_Indicators,tabpfn_v2.6,binclass,253680,162355,21,medium,8,64,02:00:00
+140,CDC_Diabetes_Health_Indicators,tabpfn_v3,binclass,253680,162355,21,medium,8,64,02:00:00
+141,CDC_Diabetes_Health_Indicators,tabpfn_v3.5,binclass,253680,162355,21,medium,8,64,02:00:00
+142,CDC_Diabetes_Health_Indicators,tabpfn_v3.5_fast,binclass,253680,162355,21,medium,8,64,02:00:00
+143,CDC_Diabetes_Health_Indicators,tabdpt_v1.3,binclass,253680,162355,21,medium,8,64,02:00:00

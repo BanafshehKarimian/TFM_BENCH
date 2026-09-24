@@ -1,0 +1,17 @@
+{
+  "dataset": "fabert",
+  "model": "xgboost",
+  "job_id": 240,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.6826456310679612,
+    "balanced_accuracy": 0.662607173122986,
+    "f1_macro": 0.6675208323972084,
+    "roc_auc": 0.9093052332409628,
+    "log_loss": 0.9891252711909796
+  },
+  "fit_seconds": 5.43498752405867,
+  "predict_seconds": 0.12173470109701157,
+  "wall_seconds": 5.978180408477783,
+  "peak_gpu_memory_mb": 0.0
+}

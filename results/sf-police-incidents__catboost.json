@@ -1,0 +1,17 @@
+{
+  "dataset": "sf-police-incidents",
+  "model": "catboost",
+  "job_id": 25,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.8784099502262954,
+    "balanced_accuracy": 0.4999987151186845,
+    "f1_macro": 0.46763484729223875,
+    "roc_auc": 0.6461272111791729,
+    "log_loss": 0.3557796101100354
+  },
+  "fit_seconds": 7.967318418901414,
+  "predict_seconds": 0.454850188922137,
+  "wall_seconds": 12.061949014663696,
+  "peak_gpu_memory_mb": 0.0
+}

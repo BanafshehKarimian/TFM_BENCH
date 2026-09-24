@@ -1,0 +1,17 @@
+{
+  "dataset": "Higgs",
+  "model": "tabpfn_v3.5_fast",
+  "job_id": 70,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.758865,
+    "balanced_accuracy": 0.7571735785336569,
+    "f1_macro": 0.7575525639920775,
+    "roc_auc": 0.8439200196105741,
+    "log_loss": 0.48420306089903214
+  },
+  "fit_seconds": 4.997294826898724,
+  "predict_seconds": 451.5296822160017,
+  "wall_seconds": 973.3300793170929,
+  "peak_gpu_memory_mb": 20058.06591796875
+}

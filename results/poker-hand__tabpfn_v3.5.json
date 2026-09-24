@@ -1,0 +1,17 @@
+{
+  "dataset": "poker-hand",
+  "model": "tabpfn_v3.5",
+  "job_id": 57,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9972439293275187,
+    "balanced_accuracy": 0.7752577613084078,
+    "f1_macro": 0.7850531203130722,
+    "roc_auc": 0.9992866931394401,
+    "log_loss": 0.0254139267378691
+  },
+  "fit_seconds": 2.9376583399716765,
+  "predict_seconds": 2764.8795409109443,
+  "wall_seconds": 5541.032696723938,
+  "peak_gpu_memory_mb": 21063.9560546875
+}

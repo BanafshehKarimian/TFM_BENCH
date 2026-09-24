@@ -1,0 +1,15 @@
+{
+  "dataset": "microsoft",
+  "model": "tabpfn_v3",
+  "job_id": 44,
+  "status": "success",
+  "metrics": {
+    "rmse": 0.7459834152045157,
+    "mae": 0.5722075700759888,
+    "r2": 0.19748884439468384
+  },
+  "fit_seconds": 24.97184653696604,
+  "predict_seconds": 1923.6312927691033,
+  "wall_seconds": 1949.7535517215729,
+  "peak_gpu_memory_mb": 31611.30126953125
+}

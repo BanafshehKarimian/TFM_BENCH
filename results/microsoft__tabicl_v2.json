@@ -1,0 +1,15 @@
+{
+  "dataset": "microsoft",
+  "model": "tabicl_v2",
+  "job_id": 40,
+  "status": "success",
+  "metrics": {
+    "rmse": 0.7468965216053735,
+    "mae": 0.5870707035064697,
+    "r2": 0.19552302360534668
+  },
+  "fit_seconds": 127.61755517707206,
+  "predict_seconds": 1022.7033090000041,
+  "wall_seconds": 1158.1165413856506,
+  "peak_gpu_memory_mb": 37368.5849609375
+}

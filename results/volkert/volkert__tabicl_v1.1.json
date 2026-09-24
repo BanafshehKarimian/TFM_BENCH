@@ -1,0 +1,17 @@
+{
+  "dataset": "volkert",
+  "model": "tabicl_v1.1",
+  "job_id": 183,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.7240610529926256,
+    "balanced_accuracy": 0.6563596242016039,
+    "f1_macro": 0.6859409097137151,
+    "roc_auc": 0.9522004160722937,
+    "log_loss": 0.775050404413392
+  },
+  "fit_seconds": 7.445924203144386,
+  "predict_seconds": 11.112176816910505,
+  "wall_seconds": 29.814412117004395,
+  "peak_gpu_memory_mb": 27821.9033203125
+}

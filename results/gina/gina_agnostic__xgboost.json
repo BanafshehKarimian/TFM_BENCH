@@ -1,0 +1,17 @@
+{
+  "dataset": "gina_agnostic",
+  "model": "xgboost",
+  "job_id": 0,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9265129682997119,
+    "balanced_accuracy": 0.9268149834265159,
+    "f1_macro": 0.9265128157214488,
+    "roc_auc": 0.9773952630573303,
+    "log_loss": 0.2333464268516619
+  },
+  "fit_seconds": 3.9523606239818037,
+  "predict_seconds": 0.2508136590477079,
+  "wall_seconds": 7.555614471435547,
+  "peak_gpu_memory_mb": 0.0
+}

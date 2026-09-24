@@ -1,0 +1,17 @@
+{
+  "dataset": "CDC_Diabetes_Health_Indicators",
+  "model": "tabicl_v1",
+  "job_id": 134,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.8676679280983917,
+    "balanced_accuracy": 0.5664878190849488,
+    "f1_macro": 0.5831554017799323,
+    "roc_auc": 0.8328581625888852,
+    "log_loss": 0.31126075220920296
+  },
+  "fit_seconds": 4.132710305973887,
+  "predict_seconds": 42.20029388112016,
+  "wall_seconds": 89.5271430015564,
+  "peak_gpu_memory_mb": 16528.84033203125
+}

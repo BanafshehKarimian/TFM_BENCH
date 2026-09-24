@@ -1,0 +1,15 @@
+{
+  "dataset": "yahoo",
+  "model": "catboost",
+  "job_id": 97,
+  "status": "success",
+  "metrics": {
+    "rmse": 0.7557061650668143,
+    "mae": 0.5996186904164897,
+    "r2": 0.408316034682327
+  },
+  "fit_seconds": 7.998232122976333,
+  "predict_seconds": 0.12942892382852733,
+  "wall_seconds": 10.696274518966675,
+  "peak_gpu_memory_mb": 0.0
+}

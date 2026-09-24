@@ -1,0 +1,17 @@
+{
+  "dataset": "jannis",
+  "model": "xgboost",
+  "job_id": 144,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.7191138711410999,
+    "balanced_accuracy": 0.5369661127137855,
+    "f1_macro": 0.5419052380675582,
+    "roc_auc": 0.8422067427897492,
+    "log_loss": 0.8988629201856465
+  },
+  "fit_seconds": 6.545532518066466,
+  "predict_seconds": 0.05791637301445007,
+  "wall_seconds": 13.588674783706665,
+  "peak_gpu_memory_mb": 0.0
+}

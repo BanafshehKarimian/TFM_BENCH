@@ -1,0 +1,15 @@
+{
+  "dataset": "yahoo",
+  "model": "xgboost",
+  "job_id": 96,
+  "status": "success",
+  "metrics": {
+    "rmse": 0.7706643684027347,
+    "mae": 0.6004733443260193,
+    "r2": 0.38466089963912964
+  },
+  "fit_seconds": 11.67235548608005,
+  "predict_seconds": 0.6874806850682944,
+  "wall_seconds": 14.579226970672607,
+  "peak_gpu_memory_mb": 0.0
+}

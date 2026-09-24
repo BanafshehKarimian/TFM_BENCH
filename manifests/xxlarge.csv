@@ -1,0 +1,13 @@
+job_id,dataset,model,task,total_rows,train_rows,n_features,profile,cpus,mem_gb,time
+0,Airlines_DepDelay_10M,xgboost,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+1,Airlines_DepDelay_10M,catboost,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+2,Airlines_DepDelay_10M,tabicl_v1,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+3,Airlines_DepDelay_10M,tabicl_v1.1,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+4,Airlines_DepDelay_10M,tabicl_v2,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+5,Airlines_DepDelay_10M,tabpfn_v2,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+6,Airlines_DepDelay_10M,tabpfn_v2.5,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+7,Airlines_DepDelay_10M,tabpfn_v2.6,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+8,Airlines_DepDelay_10M,tabpfn_v3,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+9,Airlines_DepDelay_10M,tabpfn_v3.5,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+10,Airlines_DepDelay_10M,tabpfn_v3.5_fast,regression,10000000,6400000,9,xxlarge,12,120,12:00:00
+11,Airlines_DepDelay_10M,tabdpt_v1.3,regression,10000000,6400000,9,xxlarge,12,120,12:00:00

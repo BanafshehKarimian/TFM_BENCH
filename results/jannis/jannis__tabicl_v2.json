@@ -1,0 +1,17 @@
+{
+  "dataset": "jannis",
+  "model": "tabicl_v2",
+  "job_id": 148,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.760434704723234,
+    "balanced_accuracy": 0.6151694763826749,
+    "f1_macro": 0.6443235529534506,
+    "roc_auc": 0.8905239387619299,
+    "log_loss": 0.6053708325497619
+  },
+  "fit_seconds": 3.754597138846293,
+  "predict_seconds": 10.119710272876546,
+  "wall_seconds": 24.20743441581726,
+  "peak_gpu_memory_mb": 27627.8974609375
+}

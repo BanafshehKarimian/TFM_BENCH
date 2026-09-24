@@ -1,0 +1,17 @@
+{
+  "dataset": "BNG(credit-a)",
+  "model": "tabicl_v1",
+  "job_id": 74,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.823675,
+    "balanced_accuracy": 0.8341737280278919,
+    "f1_macro": 0.8236661485299827,
+    "roc_auc": 0.9240085299295511,
+    "log_loss": 0.44534811132124485
+  },
+  "fit_seconds": 50.352671835105866,
+  "predict_seconds": 612.0817842390388,
+  "wall_seconds": 1279.682365655899,
+  "peak_gpu_memory_mb": 18326.14111328125
+}
