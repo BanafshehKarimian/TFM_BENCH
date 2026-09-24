@@ -132,18 +132,22 @@ class CatBoostAdapter(BaseTFM):
     def __init__(
         self,
         task,
-        device="cuda",
-        seed=42,
+        device,
+        seed,
         **kwargs,
     ):
         super().__init__(
             task=task,
             device=device,
             seed=seed,
-            **kwargs,
         )
 
-        from catboost import CatBoostClassifier, CatBoostRegressor
+        from catboost import (
+            CatBoostClassifier,
+            CatBoostRegressor,
+        )
+
+        device_str = str(device)
 
         common_kwargs = {
             "random_seed": seed,
@@ -158,6 +162,7 @@ class CatBoostAdapter(BaseTFM):
         else:
             common_kwargs["task_type"] = "CPU"
 
+
         common_kwargs.update(kwargs)
 
         if task == "classification":
@@ -166,14 +171,96 @@ class CatBoostAdapter(BaseTFM):
         else:
             self._model = CatBoostRegressor(**common_kwargs)
 
+        self._cat_features = None
+
+
+    def _prepare_X(self, X):
+        """
+        TALENT convention:
+
+        num_* -> actual numeric dtype
+        cat_* -> string categorical values
+
+        CatBoost needs categorical columns to be explicitly
+        specified through cat_features.
+        """
+
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X)
+
+        X = X.copy()
+
+        cat_features = []
+
+        for col in X.columns:
+
+            if str(col).startswith("num_"):
+
+                X[col] = pd.to_numeric(
+                    X[col],
+                    errors="coerce",
+                ).astype(np.float32)
+
+            elif str(col).startswith("cat_"):
+
+                cat_features.append(col)
+
+                # CatBoost likes strings / integers for categorical
+                # columns. Also handle missing values explicitly.
+                X[col] = (
+                    X[col]
+                    .astype("string")
+                    .fillna("__MISSING__")
+                    .astype(str)
+                )
+
+            else:
+
+                if (
+                    pd.api.types.is_object_dtype(X[col])
+                    or pd.api.types.is_string_dtype(X[col])
+                    or isinstance(X[col].dtype, pd.CategoricalDtype)
+                ):
+                    cat_features.append(col)
+
+                    X[col] = (
+                        X[col]
+                        .astype("string")
+                        .fillna("__MISSING__")
+                        .astype(str)
+                    )
+
+                else:
+                    X[col] = pd.to_numeric(
+                        X[col],
+                        errors="coerce",
+                    ).astype(np.float32)
+
+        return X, cat_features
+
+
     def fit(self, X, y):
-        self._model.fit(X, y)
+
+        X, cat_features = self._prepare_X(X)
+        self._cat_features = cat_features
+
+        self._model.fit(
+            X,
+            y,
+            cat_features=self._cat_features,
+        )
+
         return self
 
+
     def predict(self, X):
-        return self._model.predict(X).reshape(-1)
+
+        X, _ = self._prepare_X(X)
+
+        return self._model.predict(X)
 
     def predict_proba(self, X):
         if self.task == "classification":
+            X, _ = self._prepare_X(X)
             return self._model.predict_proba(X)
         return None
