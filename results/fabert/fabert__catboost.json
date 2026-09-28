@@ -1,17 +1,17 @@
 {
   "dataset": "fabert",
   "model": "catboost",
-  "job_id": 241,
+  "job_id": 201,
   "status": "success",
   "metrics": {
-    "accuracy": 0.7087378640776699,
-    "balanced_accuracy": 0.6793224121006396,
-    "f1_macro": 0.6901840048588656,
-    "roc_auc": 0.9252952283873496,
-    "log_loss": 0.9156836010950964
+    "accuracy": 0.7129854368932039,
+    "balanced_accuracy": 0.6818643880241496,
+    "f1_macro": 0.6944399132260922,
+    "roc_auc": 0.925217090635645,
+    "log_loss": 0.9235459251459053
   },
-  "fit_seconds": 7.224991549970582,
-  "predict_seconds": 0.022715380880981684,
-  "wall_seconds": 8.28428602218628,
-  "peak_gpu_memory_mb": 0.0
+  "fit_seconds": 34.792724755592644,
+  "predict_seconds": 0.15922490693628788,
+  "wall_seconds": 35.16914439201355,
+  "peak_gpu_memory_mb": null
 }

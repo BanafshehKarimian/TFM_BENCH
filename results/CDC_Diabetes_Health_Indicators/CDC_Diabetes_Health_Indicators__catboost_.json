@@ -1,0 +1,17 @@
+{
+  "dataset": "CDC_Diabetes_Health_Indicators",
+  "model": "catboost_",
+  "job_id": 111,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.8665838852097131,
+    "balanced_accuracy": 0.5756394291221811,
+    "f1_macro": 0.5956378045019866,
+    "roc_auc": 0.8301658775250415,
+    "log_loss": 0.31221236410747255
+  },
+  "fit_seconds": 371.25073398137465,
+  "predict_seconds": 1.906930852215737,
+  "wall_seconds": 375.4506206512451,
+  "peak_gpu_memory_mb": null
+}

@@ -1,0 +1,17 @@
+{
+  "dataset": "dilbert",
+  "model": "tabicl_v2",
+  "job_id": 193,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9975,
+    "balanced_accuracy": 0.997523178769711,
+    "f1_macro": 0.9975280181561244,
+    "roc_auc": 0.9999886592498768,
+    "log_loss": 0.008470656451644402
+  },
+  "fit_seconds": 76.53248824598268,
+  "predict_seconds": 68.64091741410084,
+  "wall_seconds": 200.12085914611816,
+  "peak_gpu_memory_mb": 20814.46044921875
+}

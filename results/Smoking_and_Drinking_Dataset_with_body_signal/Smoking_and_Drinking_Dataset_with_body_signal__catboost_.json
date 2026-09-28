@@ -1,0 +1,17 @@
+{
+  "dataset": "Smoking_and_Drinking_Dataset_with_body_signal",
+  "model": "catboost_",
+  "job_id": 71,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.7401069249003883,
+    "balanced_accuracy": 0.7401085922923776,
+    "f1_macro": 0.7401023593791088,
+    "roc_auc": 0.8233100019319425,
+    "log_loss": 0.5126588848452718
+  },
+  "fit_seconds": 528.7578475363553,
+  "predict_seconds": 0.9390848288312554,
+  "wall_seconds": 530.7203896045685,
+  "peak_gpu_memory_mb": null
+}

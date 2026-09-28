@@ -1,17 +1,17 @@
 {
   "dataset": "Fashion-MNIST",
   "model": "catboost",
-  "job_id": 157,
+  "job_id": 131,
   "status": "success",
   "metrics": {
-    "accuracy": 0.892,
-    "balanced_accuracy": 0.892,
-    "f1_macro": 0.891743481287957,
-    "roc_auc": 0.9926871825396827,
-    "log_loss": 0.29305465143838527
+    "accuracy": 0.8922857142857142,
+    "balanced_accuracy": 0.8922857142857143,
+    "f1_macro": 0.8919870208762152,
+    "roc_auc": 0.992698418367347,
+    "log_loss": 0.2907268696279282
   },
-  "fit_seconds": 20.59490993898362,
-  "predict_seconds": 0.05413380591198802,
-  "wall_seconds": 21.56949734687805,
-  "peak_gpu_memory_mb": 0.0
+  "fit_seconds": 307.0284724161029,
+  "predict_seconds": 0.20647438522428274,
+  "wall_seconds": 307.5586371421814,
+  "peak_gpu_memory_mb": null
 }

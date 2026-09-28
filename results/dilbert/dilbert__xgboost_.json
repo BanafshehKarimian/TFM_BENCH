@@ -1,0 +1,17 @@
+{
+  "dataset": "dilbert",
+  "model": "xgboost",
+  "job_id": 190,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.984,
+    "balanced_accuracy": 0.9841014103957197,
+    "f1_macro": 0.984115333977082,
+    "roc_auc": 0.9996580431055339,
+    "log_loss": 0.05812165214140745
+  },
+  "fit_seconds": 7184.891480220482,
+  "predict_seconds": 1.4240818321704865,
+  "wall_seconds": 7187.805908203125,
+  "peak_gpu_memory_mb": null
+}

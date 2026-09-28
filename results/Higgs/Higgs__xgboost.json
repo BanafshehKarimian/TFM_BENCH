@@ -1,17 +1,17 @@
 {
   "dataset": "Higgs",
   "model": "xgboost",
-  "job_id": 60,
+  "job_id": 50,
   "status": "success",
   "metrics": {
-    "accuracy": 0.73699,
-    "balanced_accuracy": 0.7355133353804717,
-    "f1_macro": 0.735743152662673,
-    "roc_auc": 0.8175772916459043,
-    "log_loss": 0.5286695394062553
+    "accuracy": 0.73895,
+    "balanced_accuracy": 0.7373854920469904,
+    "f1_macro": 0.7376545716187575,
+    "roc_auc": 0.818433311553905,
+    "log_loss": 0.527830993780353
   },
-  "fit_seconds": 5.373835362959653,
-  "predict_seconds": 0.12378556909970939,
-  "wall_seconds": 33.908291816711426,
-  "peak_gpu_memory_mb": 0.0
+  "fit_seconds": 8.624033392407,
+  "predict_seconds": 0.20880715921521187,
+  "wall_seconds": 9.238540649414062,
+  "peak_gpu_memory_mb": null
 }

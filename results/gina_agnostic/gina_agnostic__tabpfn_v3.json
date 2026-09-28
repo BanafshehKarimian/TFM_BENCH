@@ -1,0 +1,17 @@
+{
+  "dataset": "gina_agnostic",
+  "model": "tabpfn_v3",
+  "job_id": 217,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.962536023054755,
+    "balanced_accuracy": 0.962674353883346,
+    "f1_macro": 0.9625332225913621,
+    "roc_auc": 0.9933539913435737,
+    "log_loss": 0.11900565398585457
+  },
+  "fit_seconds": 2.6524470900185406,
+  "predict_seconds": 12.633599640801549,
+  "wall_seconds": 213.03503823280334,
+  "peak_gpu_memory_mb": 2196.49169921875
+}

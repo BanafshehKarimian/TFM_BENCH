@@ -1,17 +1,17 @@
 {
   "dataset": "jannis",
   "model": "catboost",
-  "job_id": 145,
+  "job_id": 121,
   "status": "success",
   "metrics": {
-    "accuracy": 0.7091419358691109,
-    "balanced_accuracy": 0.5323244900146458,
-    "f1_macro": 0.5393113478855859,
-    "roc_auc": 0.8383281695973973,
-    "log_loss": 0.722919628309784
+    "accuracy": 0.719830417388189,
+    "balanced_accuracy": 0.5420719193112638,
+    "f1_macro": 0.5498544857496228,
+    "roc_auc": 0.8479116906722594,
+    "log_loss": 0.6975608843340957
   },
-  "fit_seconds": 6.434736303053796,
-  "predict_seconds": 0.02911860984750092,
-  "wall_seconds": 17.787472248077393,
-  "peak_gpu_memory_mb": 0.0
+  "fit_seconds": 15.741920614615083,
+  "predict_seconds": 0.03158068284392357,
+  "wall_seconds": 15.869164943695068,
+  "peak_gpu_memory_mb": null
 }

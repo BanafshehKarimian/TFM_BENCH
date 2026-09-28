@@ -1,0 +1,17 @@
+{
+  "dataset": "covertype",
+  "model": "xgboost_",
+  "job_id": 100,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9598547369689251,
+    "balanced_accuracy": 0.9233749406949083,
+    "f1_macro": 0.9338426168660153,
+    "roc_auc": 0.99767227891679,
+    "log_loss": 0.12127221726938676
+  },
+  "fit_seconds": 1818.2982587181032,
+  "predict_seconds": 24.119219570886344,
+  "wall_seconds": 1866.617512702942,
+  "peak_gpu_memory_mb": null
+}

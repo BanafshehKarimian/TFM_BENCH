@@ -1,0 +1,45 @@
+\begin{table*}[t]
+\centering
+\caption{Performance comparison on regression datasets.}
+\label{tab:benchmark_regression}
+\setlength{\tabcolsep}{3.5pt}
+\renewcommand{\arraystretch}{1.12}
+\scriptsize
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrccccccccccc}
+\toprule
+Dataset & $N$ & $N_{\mathrm{train}}$ & $F$ & XGBoost & XGBoost+ & CatBoost & CatBoost+ & TabICL v1 & TabICL v2 & TabPFN v3 & TabPFN v3.5 & TabPFN v3.5-fast & TabPFN v2.6 & TabPFN v2.5 \\
+\midrule
+\rowcolor{gray!15}
+\multicolumn{15}{l}{\textbf{RMSE}} \\
+Airlines DepDelay 10M & 10.0M & 6.40M & 9 & \cellcolor[HTML]{F4CCCC}29.1428 & \cellcolor[HTML]{EBEED0}28.8828 & \cellcolor[HTML]{D9EAD3}\textbf{28.8005} & \cellcolor[HTML]{DFEBD2}28.8273 & \textcolor{gray}{N/A} & \textcolor{red!70!black}{FAIL} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} \\
+microsoft & 1.20M & 723K & 136 & \cellcolor[HTML]{F4CCCC}0.7688 & \cellcolor[HTML]{DBEAD3}0.7419 & \cellcolor[HTML]{E9EDD0}0.7471 & \cellcolor[HTML]{DEEBD2}0.7430 & \textcolor{gray}{N/A} & \cellcolor[HTML]{E9EDD0}0.7469 & \cellcolor[HTML]{E6EDD1}0.7460 & \cellcolor[HTML]{D9EAD3}\textbf{0.7411} & \cellcolor[HTML]{DFEBD2}0.7433 & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} \\
+yahoo & 710K & 473K & 699 & \cellcolor[HTML]{F4CCCC}0.7691 & \cellcolor[HTML]{DAEAD3}0.7323 & \cellcolor[HTML]{FDECCC}0.7535 & \cellcolor[HTML]{FFF2CC}0.7503 & \textcolor{gray}{N/A} & \cellcolor[HTML]{FCF1CC}0.7492 & \textcolor{red!70!black}{FAIL} & \cellcolor[HTML]{D9EAD3}\textbf{0.7319} & \cellcolor[HTML]{EEEECF}0.7422 & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} \\
+blogfeedback & 60.0K & 38.4K & 276 & \cellcolor[HTML]{F9F1CD}22.4739 & \cellcolor[HTML]{DCEBD3}20.3569 & \cellcolor[HTML]{E0ECD2}20.6807 & \cellcolor[HTML]{D9EAD3}\textbf{20.1658} & \textcolor{gray}{N/A} & \cellcolor[HTML]{E3ECD1}20.8594 & \cellcolor[HTML]{F9DCCC}24.5040 & \cellcolor[HTML]{F6F0CE}22.2692 & \cellcolor[HTML]{F9F1CD}22.4972 & \cellcolor[HTML]{F4CCCC}25.6213 & \cellcolor[HTML]{FEF0CC}23.0404 \\
+Large scale Wave... & 36.0K & 23.1K & 99 & \cellcolor[HTML]{F9DDCC}7125.1989 & \cellcolor[HTML]{FEF2CC}6721.8597 & \cellcolor[HTML]{F4CCCC}7450.3705 & \cellcolor[HTML]{F7D8CC}7223.6668 & \textcolor{gray}{N/A} & \cellcolor[HTML]{E1ECD2}6165.3639 & \cellcolor[HTML]{DFEBD2}6119.3578 & \cellcolor[HTML]{D9EAD3}\textbf{6015.4537} & \cellcolor[HTML]{DDEBD2}6085.2534 & \cellcolor[HTML]{F9F1CD}6611.4250 & \cellcolor[HTML]{EDEECF}6400.1258 \\
+UJIndoorLoc & 21.0K & 13.5K & 520 & \cellcolor[HTML]{F5CFCC}10.6707 & \cellcolor[HTML]{FDECCC}8.5821 & \cellcolor[HTML]{F4CCCC}10.9092 & \cellcolor[HTML]{F8D9CC}9.9622 & \textcolor{gray}{N/A} & \cellcolor[HTML]{E7EDD0}6.4341 & \cellcolor[HTML]{E5ECD1}6.2526 & \cellcolor[HTML]{D9EAD3}\textbf{5.4035} & \cellcolor[HTML]{E3ECD1}6.1145 & \cellcolor[HTML]{E8EDD0}6.4677 & \cellcolor[HTML]{EBEED0}6.7042 \\
+\addlinespace[2pt]
+\rowcolor{gray!15}
+\multicolumn{15}{l}{\textbf{MAE}} \\
+Airlines DepDelay 10M & 10.0M & 6.40M & 9 & \cellcolor[HTML]{F4CCCC}13.9009 & \cellcolor[HTML]{FCE6CC}13.8403 & \cellcolor[HTML]{D9EAD3}\textbf{13.7234} & \cellcolor[HTML]{E6EDD1}13.7549 & \textcolor{gray}{N/A} & \textcolor{red!70!black}{FAIL} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} \\
+microsoft & 1.20M & 723K & 136 & \cellcolor[HTML]{F4CCCC}0.5933 & \cellcolor[HTML]{EDEECF}0.5778 & \cellcolor[HTML]{FCF1CC}0.5820 & \cellcolor[HTML]{F4F0CE}0.5796 & \textcolor{gray}{N/A} & \cellcolor[HTML]{FAE2CC}0.5871 & \cellcolor[HTML]{D9EAD3}\textbf{0.5722} & \cellcolor[HTML]{F0EFCF}0.5785 & \cellcolor[HTML]{E8EDD0}0.5765 & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} \\
+yahoo & 710K & 473K & 699 & \cellcolor[HTML]{F4CCCC}0.5995 & \cellcolor[HTML]{E8EDD0}0.5755 & \cellcolor[HTML]{F6D3CC}0.5968 & \cellcolor[HTML]{F7D5CC}0.5959 & \textcolor{gray}{N/A} & \cellcolor[HTML]{FCE7CC}0.5888 & \textcolor{red!70!black}{FAIL} & \cellcolor[HTML]{D9EAD3}\textbf{0.5696} & \cellcolor[HTML]{FDEBCC}0.5872 & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} \\
+blogfeedback & 60.0K & 38.4K & 276 & \cellcolor[HTML]{F4CCCC}5.4375 & \cellcolor[HTML]{FAE2CC}5.2002 & \cellcolor[HTML]{F7D5CC}5.3408 & \cellcolor[HTML]{F9DDCC}5.2466 & \textcolor{gray}{N/A} & \cellcolor[HTML]{E0EBD2}4.6825 & \cellcolor[HTML]{E6EDD1}4.7432 & \cellcolor[HTML]{D9EAD3}\textbf{4.6062} & \cellcolor[HTML]{DDEBD2}4.6540 & \cellcolor[HTML]{FAE0CC}5.2231 & \cellcolor[HTML]{E7EDD0}4.7642 \\
+Large scale Wave... & 36.0K & 23.1K & 99 & \cellcolor[HTML]{E3ECD1}2877.0518 & \cellcolor[HTML]{F7F0CD}3349.6025 & \cellcolor[HTML]{F4CCCC}4401.2957 & \cellcolor[HTML]{F4CCCC}4393.7616 & \textcolor{gray}{N/A} & \cellcolor[HTML]{DBEAD3}2692.6915 & \cellcolor[HTML]{DEEBD2}2767.1855 & \cellcolor[HTML]{D9EAD3}\textbf{2653.7448} & \cellcolor[HTML]{DDEBD2}2751.7423 & \cellcolor[HTML]{FCE9CC}3744.8320 & \cellcolor[HTML]{E7EDD0}2981.4792 \\
+UJIndoorLoc & 21.0K & 13.5K & 520 & \cellcolor[HTML]{F8DACC}6.0970 & \cellcolor[HTML]{FFF0CC}4.6069 & \cellcolor[HTML]{F4CCCC}7.0018 & \cellcolor[HTML]{F8D8CC}6.2016 & \textcolor{gray}{N/A} & \cellcolor[HTML]{E8EDD0}2.9920 & \cellcolor[HTML]{E7EDD0}2.9153 & \cellcolor[HTML]{D9EAD3}\textbf{2.0110} & \cellcolor[HTML]{E5ECD1}2.7742 & \cellcolor[HTML]{F3F0CE}3.7308 & \cellcolor[HTML]{E9EDD0}3.0346 \\
+\addlinespace[2pt]
+\rowcolor{gray!15}
+\multicolumn{15}{l}{\textbf{$R^2$}} \\
+Airlines DepDelay 10M & 10.0M & 6.40M & 9 & \cellcolor[HTML]{F4CCCC}0.0295 & \cellcolor[HTML]{EBEED0}0.0467 & \cellcolor[HTML]{D9EAD3}\textbf{0.0521} & \cellcolor[HTML]{DFEBD2}0.0504 & \textcolor{gray}{N/A} & \textcolor{red!70!black}{FAIL} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} \\
+microsoft & 1.20M & 723K & 136 & \cellcolor[HTML]{F4CCCC}0.1476 & \cellcolor[HTML]{DBEAD3}0.2063 & \cellcolor[HTML]{E9EDD0}0.1951 & \cellcolor[HTML]{DEEBD2}0.2039 & \textcolor{gray}{N/A} & \cellcolor[HTML]{E9EDD0}0.1955 & \cellcolor[HTML]{E6EDD1}0.1975 & \cellcolor[HTML]{D9EAD3}\textbf{0.2081} & \cellcolor[HTML]{DFEBD2}0.2032 & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} \\
+yahoo & 710K & 473K & 699 & \cellcolor[HTML]{F4CCCC}0.3871 & \cellcolor[HTML]{DAEAD3}0.4445 & \cellcolor[HTML]{FDECCC}0.4118 & \cellcolor[HTML]{FEF2CC}0.4167 & \textcolor{gray}{N/A} & \cellcolor[HTML]{FCF1CD}0.4185 & \textcolor{red!70!black}{FAIL} & \cellcolor[HTML]{D9EAD3}\textbf{0.4450} & \cellcolor[HTML]{EEEECF}0.4293 & \textcolor{gray}{N/A} & \textcolor{gray}{N/A} \\
+blogfeedback & 60.0K & 38.4K & 276 & \cellcolor[HTML]{F7F0CD}0.5712 & \cellcolor[HTML]{DBEAD3}0.6481 & \cellcolor[HTML]{DFEBD2}0.6369 & \cellcolor[HTML]{D9EAD3}\textbf{0.6547} & \textcolor{gray}{N/A} & \cellcolor[HTML]{E2ECD1}0.6306 & \cellcolor[HTML]{F9DDCC}0.4902 & \cellcolor[HTML]{F4F0CE}0.5789 & \cellcolor[HTML]{F7F0CD}0.5703 & \cellcolor[HTML]{F4CCCC}0.4426 & \cellcolor[HTML]{FFF2CC}0.5493 \\
+Large scale Wave... & 36.0K & 23.1K & 99 & \cellcolor[HTML]{FBE3CC}0.9967 & \cellcolor[HTML]{FCF1CD}0.9970 & \cellcolor[HTML]{F4CCCC}0.9963 & \cellcolor[HTML]{F9DECC}0.9966 & \textcolor{gray}{N/A} & \cellcolor[HTML]{DFEBD2}0.9975 & \cellcolor[HTML]{DFEBD2}0.9975 & \cellcolor[HTML]{D9EAD3}\textbf{0.9976} & \cellcolor[HTML]{D9EAD3}\textbf{0.9976} & \cellcolor[HTML]{F6F0CE}0.9971 & \cellcolor[HTML]{EBEED0}0.9973 \\
+UJIndoorLoc & 21.0K & 13.5K & 520 & \cellcolor[HTML]{F5D0CC}0.9925 & \cellcolor[HTML]{FEF2CC}0.9952 & \cellcolor[HTML]{F4CCCC}0.9922 & \cellcolor[HTML]{F9DDCC}0.9935 & \textcolor{gray}{N/A} & \cellcolor[HTML]{E3ECD1}0.9973 & \cellcolor[HTML]{E2ECD1}0.9974 & \cellcolor[HTML]{D9EAD3}\textbf{0.9981} & \cellcolor[HTML]{E1ECD2}0.9975 & \cellcolor[HTML]{E3ECD1}0.9973 & \cellcolor[HTML]{E7EDD0}0.9970 \\
+\bottomrule
+\end{tabular}%
+}
+\vspace{2pt}
+\begin{minipage}{0.99\textwidth}
+\end{minipage}
+\end{table*}

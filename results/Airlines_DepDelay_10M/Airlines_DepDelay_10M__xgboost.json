@@ -1,0 +1,15 @@
+{
+  "dataset": "Airlines_DepDelay_10M",
+  "model": "xgboost",
+  "job_id": 0,
+  "status": "success",
+  "metrics": {
+    "rmse": 29.14282522562888,
+    "mae": 13.900851294111826,
+    "r2": 0.029465361042567806
+  },
+  "fit_seconds": 108.13137105479836,
+  "predict_seconds": 6.8247765470296144,
+  "wall_seconds": 115.07096147537231,
+  "peak_gpu_memory_mb": null
+}

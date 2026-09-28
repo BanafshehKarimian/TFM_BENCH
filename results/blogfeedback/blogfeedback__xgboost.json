@@ -1,15 +1,15 @@
 {
   "dataset": "blogfeedback",
   "model": "xgboost",
-  "job_id": 168,
+  "job_id": 140,
   "status": "success",
   "metrics": {
-    "rmse": 23.297890196827943,
-    "mae": 5.5212524386457185,
-    "r2": 0.5391280838309509
+    "rmse": 22.47386899114561,
+    "mae": 5.43745483974003,
+    "r2": 0.5711526347957576
   },
-  "fit_seconds": 2.529999015852809,
-  "predict_seconds": 0.042164291953668,
-  "wall_seconds": 2.900691032409668,
-  "peak_gpu_memory_mb": 0.0
+  "fit_seconds": 9.119249613024294,
+  "predict_seconds": 1.2031592559069395,
+  "wall_seconds": 10.38469123840332,
+  "peak_gpu_memory_mb": null
 }

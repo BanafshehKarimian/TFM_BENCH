@@ -1,0 +1,17 @@
+{
+  "dataset": "Smoking_and_Drinking_Dataset_with_body_signal",
+  "model": "xgboost_",
+  "job_id": 70,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.7394613405961568,
+    "balanced_accuracy": 0.7394633504996335,
+    "f1_macro": 0.7394545393516425,
+    "roc_auc": 0.823071798452111,
+    "log_loss": 0.5128697453670009
+  },
+  "fit_seconds": 181.67937957216054,
+  "predict_seconds": 0.8625431954860687,
+  "wall_seconds": 183.5632402896881,
+  "peak_gpu_memory_mb": null
+}

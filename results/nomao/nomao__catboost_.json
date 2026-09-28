@@ -1,0 +1,17 @@
+{
+  "dataset": "nomao",
+  "model": "catboost",
+  "job_id": 171,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9692441607427825,
+    "balanced_accuracy": 0.959423717911957,
+    "f1_macro": 0.9620982793590521,
+    "roc_auc": 0.9950621720337035,
+    "log_loss": 0.07932355144478599
+  },
+  "fit_seconds": 861.1620824071579,
+  "predict_seconds": 0.7296781451441348,
+  "wall_seconds": 862.6208629608154,
+  "peak_gpu_memory_mb": null
+}

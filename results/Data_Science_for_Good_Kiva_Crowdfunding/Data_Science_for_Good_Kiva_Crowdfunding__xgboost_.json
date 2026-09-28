@@ -1,0 +1,17 @@
+{
+  "dataset": "Data_Science_for_Good_Kiva_Crowdfunding",
+  "model": "xgboost_",
+  "job_id": 90,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9656587778696524,
+    "balanced_accuracy": 0.9407959438963747,
+    "f1_macro": 0.9338696587462879,
+    "roc_auc": 0.9965269754783198,
+    "log_loss": 0.09286911815385507
+  },
+  "fit_seconds": 1115.0022464306094,
+  "predict_seconds": 15.491322339978069,
+  "wall_seconds": 1147.1490471363068,
+  "peak_gpu_memory_mb": null
+}

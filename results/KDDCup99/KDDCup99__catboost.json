@@ -1,0 +1,17 @@
+{
+  "dataset": "KDDCup99",
+  "model": "catboost",
+  "job_id": 11,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.999957129164723,
+    "balanced_accuracy": 0.7740438377510777,
+    "f1_macro": 0.7907125562135384,
+    "roc_auc": NaN,
+    "log_loss": NaN
+  },
+  "fit_seconds": 20865.15218342282,
+  "predict_seconds": 8.788862650748342,
+  "wall_seconds": 20885.708433389664,
+  "peak_gpu_memory_mb": null
+}

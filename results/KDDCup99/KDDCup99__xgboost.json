@@ -1,0 +1,17 @@
+{
+  "dataset": "KDDCup99",
+  "model": "xgboost",
+  "job_id": 10,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9998938436459808,
+    "balanced_accuracy": 0.6848306200685434,
+    "f1_macro": 0.6888868430893044,
+    "roc_auc": NaN,
+    "log_loss": NaN
+  },
+  "fit_seconds": 383.02624431205913,
+  "predict_seconds": 12.925626199692488,
+  "wall_seconds": 409.93822026252747,
+  "peak_gpu_memory_mb": null
+}

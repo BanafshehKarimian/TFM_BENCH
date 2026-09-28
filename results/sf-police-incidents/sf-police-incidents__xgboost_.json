@@ -1,0 +1,17 @@
+{
+  "dataset": "sf-police-incidents",
+  "model": "xgboost_",
+  "job_id": 20,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.8783354589677317,
+    "balanced_accuracy": 0.5031954053929992,
+    "f1_macro": 0.47498511755892925,
+    "roc_auc": 0.6922900847039372,
+    "log_loss": 0.3446642848341816
+  },
+  "fit_seconds": 1547.842701792717,
+  "predict_seconds": 29.411065816879272,
+  "wall_seconds": 1608.1199305057526,
+  "peak_gpu_memory_mb": null
+}

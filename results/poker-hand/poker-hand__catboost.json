@@ -1,17 +1,17 @@
 {
   "dataset": "poker-hand",
   "model": "catboost",
-  "job_id": 49,
+  "job_id": 41,
   "status": "success",
   "metrics": {
-    "accuracy": 0.9985805016536424,
-    "balanced_accuracy": 0.6725300607691456,
-    "f1_macro": 0.7096995419130876,
-    "roc_auc": 0.9714769841006176,
-    "log_loss": 0.018641851284791715
+    "accuracy": 0.992400074145618,
+    "balanced_accuracy": 0.560113679309477,
+    "f1_macro": 0.6215455312138225,
+    "roc_auc": 0.9584213435393467,
+    "log_loss": 0.10357923304901485
   },
-  "fit_seconds": 6.7908209699671715,
-  "predict_seconds": 0.09092830307781696,
-  "wall_seconds": 10.516125202178955,
-  "peak_gpu_memory_mb": 0.0
+  "fit_seconds": 216.54442538041621,
+  "predict_seconds": 0.20486069098114967,
+  "wall_seconds": 220.457190990448,
+  "peak_gpu_memory_mb": null
 }

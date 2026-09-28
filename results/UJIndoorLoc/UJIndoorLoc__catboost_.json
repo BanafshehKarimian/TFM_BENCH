@@ -1,0 +1,15 @@
+{
+  "dataset": "UJIndoorLoc",
+  "model": "catboost",
+  "job_id": 181,
+  "status": "success",
+  "metrics": {
+    "rmse": 9.962228483800954,
+    "mae": 6.201582215512969,
+    "r2": 0.9934847820642337
+  },
+  "fit_seconds": 412.0011535100639,
+  "predict_seconds": 0.35588421020656824,
+  "wall_seconds": 412.3789746761322,
+  "peak_gpu_memory_mb": null
+}

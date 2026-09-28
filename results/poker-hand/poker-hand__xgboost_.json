@@ -1,0 +1,17 @@
+{
+  "dataset": "poker-hand",
+  "model": "xgboost_",
+  "job_id": 40,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9593516160817943,
+    "balanced_accuracy": 0.4511723543647653,
+    "f1_macro": 0.4860312842270497,
+    "roc_auc": 0.8967276289379904,
+    "log_loss": 0.18748817989476602
+  },
+  "fit_seconds": 1812.7418843191117,
+  "predict_seconds": 31.95369985885918,
+  "wall_seconds": 1875.4843542575836,
+  "peak_gpu_memory_mb": null
+}

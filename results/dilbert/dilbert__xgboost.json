@@ -1,17 +1,17 @@
 {
   "dataset": "dilbert",
   "model": "xgboost",
-  "job_id": 228,
+  "job_id": 190,
   "status": "success",
   "metrics": {
-    "accuracy": 0.98,
-    "balanced_accuracy": 0.9801440952401862,
-    "f1_macro": 0.9800973986489346,
-    "roc_auc": 0.9995311852880311,
-    "log_loss": 0.0559057225647844
+    "accuracy": 0.9815,
+    "balanced_accuracy": 0.9816167126813655,
+    "f1_macro": 0.9816398484403692,
+    "roc_auc": 0.9995435469072647,
+    "log_loss": 0.05350712543994777
   },
-  "fit_seconds": 8.661203328054398,
-  "predict_seconds": 0.14388277707621455,
-  "wall_seconds": 9.178308963775635,
-  "peak_gpu_memory_mb": 0.0
+  "fit_seconds": 77.77354884427041,
+  "predict_seconds": 0.44786188192665577,
+  "wall_seconds": 78.83335423469543,
+  "peak_gpu_memory_mb": null
 }

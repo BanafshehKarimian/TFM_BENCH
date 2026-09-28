@@ -1,0 +1,15 @@
+{
+  "dataset": "Airlines_DepDelay_10M",
+  "model": "catboost",
+  "job_id": 1,
+  "status": "success",
+  "metrics": {
+    "rmse": 28.800537279459746,
+    "mae": 13.723426036325916,
+    "r2": 0.05212969893711883
+  },
+  "fit_seconds": 475.07455643825233,
+  "predict_seconds": 5.628774676006287,
+  "wall_seconds": 480.9304497241974,
+  "peak_gpu_memory_mb": null
+}

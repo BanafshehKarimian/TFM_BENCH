@@ -1,0 +1,17 @@
+{
+  "dataset": "Higgs",
+  "model": "catboost_",
+  "job_id": 51,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.749105,
+    "balanced_accuracy": 0.7475742835323744,
+    "f1_macro": 0.7478583615063696,
+    "roc_auc": 0.8315149492169388,
+    "log_loss": 0.502144612252292
+  },
+  "fit_seconds": 663.431079951115,
+  "predict_seconds": 0.6087178168818355,
+  "wall_seconds": 664.747967004776,
+  "peak_gpu_memory_mb": null
+}

@@ -1,0 +1,17 @@
+{
+  "dataset": "Data_Science_for_Good_Kiva_Crowdfunding",
+  "model": "catboost",
+  "job_id": 91,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9655097920903449,
+    "balanced_accuracy": 0.9266864234340451,
+    "f1_macro": 0.9261743967982385,
+    "roc_auc": 0.9961317860884525,
+    "log_loss": 0.09437208042624862
+  },
+  "fit_seconds": 237.3179217800498,
+  "predict_seconds": 0.37670817505568266,
+  "wall_seconds": 238.4018280506134,
+  "peak_gpu_memory_mb": null
+}

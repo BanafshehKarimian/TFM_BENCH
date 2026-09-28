@@ -1,0 +1,17 @@
+{
+  "dataset": "nomao",
+  "model": "xgboost",
+  "job_id": 170,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9721456550123313,
+    "balanced_accuracy": 0.9634356902418024,
+    "f1_macro": 0.9657058278450469,
+    "roc_auc": 0.9958657526345603,
+    "log_loss": 0.0763171628898072
+  },
+  "fit_seconds": 74.80562839005142,
+  "predict_seconds": 0.4743839236907661,
+  "wall_seconds": 75.7563009262085,
+  "peak_gpu_memory_mb": null
+}

@@ -1,17 +1,17 @@
 {
   "dataset": "CDC_Diabetes_Health_Indicators",
   "model": "xgboost",
-  "job_id": 132,
+  "job_id": 110,
   "status": "success",
   "metrics": {
-    "accuracy": 0.8544623147272153,
-    "balanced_accuracy": 0.5875081588408535,
-    "f1_macro": 0.6064036399184096,
-    "roc_auc": 0.7897393282925322,
-    "log_loss": 0.36933472350148183
+    "accuracy": 0.8546002838221382,
+    "balanced_accuracy": 0.5881218405128827,
+    "f1_macro": 0.6071424545696182,
+    "roc_auc": 0.7895330237614778,
+    "log_loss": 0.3700766249708857
   },
-  "fit_seconds": 3.0960848678369075,
-  "predict_seconds": 0.045216519851237535,
-  "wall_seconds": 4.133884429931641,
-  "peak_gpu_memory_mb": 0.0
+  "fit_seconds": 3.3856768496334553,
+  "predict_seconds": 0.3598021883517504,
+  "wall_seconds": 4.231234550476074,
+  "peak_gpu_memory_mb": null
 }
