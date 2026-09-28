@@ -17,15 +17,22 @@ RESULT_ROOT = Path("./results")
 
 
 MODEL_KWARGS = {
-
     "xgboost": {
-        "n_estimators": 500,
-        "max_depth": 8,
+        "tune": True,
+        "n_trials": 30,
+        "tune_max_rows": 500_000,
+        "validation_fraction": 0.20,
+        "n_ensemble": 10,
+        "ensemble_top_k": 3,
     },
 
     "catboost": {
-        "iterations": 500,
-        "depth": 8,
+        "tune": True,
+        "n_trials": 30,
+        "tune_max_rows": 500_000,
+        "validation_fraction": 0.20,
+        "n_ensemble": 10,
+        "ensemble_top_k": 3,
     },
 
     "tabdpt_v1.3": {
@@ -37,7 +44,6 @@ MODEL_KWARGS = {
         "n_estimators": 8,
     },
 }
-
 
 def main():
 
