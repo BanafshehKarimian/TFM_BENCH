@@ -39,17 +39,23 @@ def classification_metrics(
                 y_proba[:, 1],
             )
         else:
-            results["roc_auc"] = roc_auc_score(
+            try:
+                results["roc_auc"] = roc_auc_score(
+                    y_true,
+                    y_proba,
+                    multi_class="ovo",
+                    average="macro",
+                )
+            except ValueError:
+                results["roc_auc"] = np.nan
+
+        try:
+            results["log_loss"] = log_loss(
                 y_true,
                 y_proba,
-                multi_class="ovo",
-                average="macro",
             )
-
-        results["log_loss"] = log_loss(
-            y_true,
-            y_proba,
-        )
+        except ValueError:
+            results["log_loss"] = np.nan
 
     return results
 

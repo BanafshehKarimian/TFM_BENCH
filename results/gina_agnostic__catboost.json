@@ -1,0 +1,17 @@
+{
+  "dataset": "gina_agnostic",
+  "model": "catboost",
+  "job_id": 211,
+  "status": "success",
+  "metrics": {
+    "accuracy": 0.9423631123919308,
+    "balanced_accuracy": 0.9424455650353485,
+    "f1_macro": 0.9423554525595342,
+    "roc_auc": 0.9861846095054538,
+    "log_loss": 0.15904288201750927
+  },
+  "fit_seconds": 522.3813557862304,
+  "predict_seconds": 0.40028995741158724,
+  "wall_seconds": 523.193300485611,
+  "peak_gpu_memory_mb": null
+}
