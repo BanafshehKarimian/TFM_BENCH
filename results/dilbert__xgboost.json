@@ -1,6 +1,0 @@
-{
-  "dataset": "dilbert",
-  "model": "xgboost",
-  "job_id": 190,
-  "status": "failed"
-}

@@ -1,9 +1,0 @@
-{
-  "dataset": "volkert",
-  "model": "xgboost",
-  "job_id": 150,
-  "status": "failed",
-  "error_type": "RuntimeError",
-  "error": "All XGBoost tuning trials failed.",
-  "traceback": "Traceback (most recent call last):\n  File \"/export/livia/home/vision/Bkarimian/TFM_BENCH/run_pair.py\", line 131, in main\n    result = evaluate(\n             ^^^^^^^^^\n  File \"/export/livia/home/vision/Bkarimian/TFM_BENCH/tfmbench/evaluate.py\", line 71, in evaluate\n    model.fit(\n  File \"/export/livia/home/vision/Bkarimian/TFM_BENCH/tfmbench/models/gbdt.py\", line 1006, in fit\n    self._tune_parameters(\n  File \"/export/livia/home/vision/Bkarimian/TFM_BENCH/tfmbench/models/gbdt.py\", line 932, in _tune_parameters\n    raise RuntimeError(\nRuntimeError: All XGBoost tuning trials failed.\n"
-}

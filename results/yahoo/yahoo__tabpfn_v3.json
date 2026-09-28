@@ -1,9 +1,0 @@
-{
-  "dataset": "yahoo",
-  "model": "tabpfn_v3",
-  "job_id": 87,
-  "status": "failed",
-  "error_type": "AcceleratorError",
-  "error": "CUDA error: out of memory\nSearch for `cudaErrorMemoryAllocation' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.\nThe CUDA driver logged these messages, which may provide useful details:\nReturning 2 (CUDA_ERROR_OUT_OF_MEMORY) from cuDevicePrimaryCtxRetain\n\n",
-  "traceback": "Traceback (most recent call last):\n  File \"/project/6004986/banafsh7/TFM_BENCH/run_pair.py\", line 125, in main\n    result = evaluate(\n             ^^^^^^^^^\n  File \"/project/6004986/banafsh7/TFM_BENCH/tfmbench/evaluate.py\", line 64, in evaluate\n    torch.cuda.synchronize()\n  File \"/scratch/banafsh7/py311_tfm/lib/python3.11/site-packages/torch/cuda/__init__.py\", line 1281, in synchronize\n    return torch._C._cuda_synchronize()\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\ntorch.AcceleratorError: CUDA error: out of memory\nSearch for `cudaErrorMemoryAllocation' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.\nThe CUDA driver logged these messages, which may provide useful details:\nReturning 2 (CUDA_ERROR_OUT_OF_MEMORY) from cuDevicePrimaryCtxRetain\n\n\n"
-}
