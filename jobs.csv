@@ -1,2 +1,3 @@
 job_id,dataset,model,task,total_rows,train_rows,n_features,profile,cpus,mem_gb,time
-87,yahoo,tabpfn_v3,regression,709877,473134,699,large,8,120,01:00:00
+87,3-million-Sudoku-puzzles-with-ratings,tabpfn_v3.5_fast,regression,709877,473134,699,large,8,120,01:00:00
+87,Airlines_DepDelay_10M,tabpfn_v3.5_fast,regression,709877,473134,699,large,8,120,01:00:00

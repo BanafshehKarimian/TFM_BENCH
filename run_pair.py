@@ -4,7 +4,7 @@ import os
 import time
 import traceback
 from pathlib import Path
-
+import numpy as np
 import pandas as pd
 import torch
 
@@ -14,7 +14,8 @@ from tfmbench.datasets.talent import load_talent_dataset
 
 DATA_ROOT = "./data/datasets-talent-large"
 RESULT_ROOT = Path("./results")
-
+SAMPLING_ROOT = Path("./data/sampling_idx")
+SAMPLE_SEED = 42
 
 MODEL_KWARGS = {
     "xgboost": {
@@ -45,6 +46,95 @@ MODEL_KWARGS = {
     },
 }
 
+def apply_fixed_train_sample(
+    data,
+    dataset_name,
+    sample_size,
+    sampling_root,
+    seed,
+):
+    """
+    Apply a precomputed training subset.
+
+    X_test/y_test are left untouched.
+    """
+
+    safe_dataset = dataset_name.replace("/", "_")
+
+    index_file = (
+        sampling_root
+        / safe_dataset
+        / f"seed_{seed}"
+        / f"train_idx_{sample_size}.npy"
+    )
+
+    if not index_file.exists():
+        raise FileNotFoundError(
+            f"Sampling index file does not exist:\n"
+            f"{index_file}"
+        )
+
+    print(
+        f"Loading fixed training sample: "
+        f"{index_file}"
+    )
+
+    indices = np.load(
+        index_file
+    )
+
+    if len(indices) != sample_size:
+        raise ValueError(
+            f"Expected {sample_size:,} indices, "
+            f"but found {len(indices):,}."
+        )
+
+    if indices.max() >= len(data.y_train):
+        raise ValueError(
+            f"Sampling indices are incompatible with dataset. "
+            f"Maximum index={indices.max():,}, "
+            f"but train size={len(data.y_train):,}."
+        )
+
+    # --------------------------------------------------
+    # X_train
+    # --------------------------------------------------
+
+    if hasattr(data.X_train, "iloc"):
+
+        # pandas DataFrame
+        data.X_train = (
+            data.X_train
+            .iloc[indices]
+            .reset_index(drop=True)
+        )
+
+    else:
+
+        # NumPy array / similar
+        data.X_train = (
+            data.X_train[
+                indices
+            ]
+        )
+
+    # --------------------------------------------------
+    # y_train
+    # --------------------------------------------------
+
+    data.y_train = (
+        np.asarray(data.y_train)[
+            indices
+        ]
+    )
+
+    print(
+        f"Applied fixed sample: "
+        f"{len(data.y_train):,} training rows"
+    )
+
+    return data
+
 def main():
 
     parser = argparse.ArgumentParser()
@@ -59,6 +149,23 @@ def main():
         type=int,
         required=True,
     )
+    
+    parser.add_argument(
+        "--sample-size",
+        type=int,
+        default=None,
+        help=(
+            "Number of training rows to use from the "
+            "precomputed fixed sample. "
+            "Default: None = use full training set."
+        ),
+    )
+
+    parser.add_argument(
+        "--test-batch-size",
+        type=int,
+        default=None,
+    )
 
     args = parser.parse_args()
 
@@ -68,6 +175,7 @@ def main():
 
     dataset_name = job["dataset"]
     model_name = job["model"]
+    sample_size = args.sample_size
 
     print("=" * 100)
     print(f"Dataset : {dataset_name}")
@@ -112,7 +220,37 @@ def main():
             root=DATA_ROOT,
             include_val=False,
         )
+        
+        original_train_size = len(data.y_train)
 
+        if sample_size is not None:
+
+            if sample_size < original_train_size:
+
+                data = apply_fixed_train_sample(
+                    data=data,
+                    dataset_name=dataset_name,
+                    sample_size=sample_size,
+                    sampling_root=SAMPLING_ROOT,
+                    seed=SAMPLE_SEED,
+                )
+
+            else:
+
+                print(
+                    f"Requested sample size "
+                    f"{sample_size:,} >= "
+                    f"available training rows "
+                    f"{original_train_size:,}. "
+                    f"Using full training set."
+                )
+
+        else:
+
+            print(
+                "No sample size provided. "
+                "Using full training set."
+            )
         print(
             f"Loaded: "
             f"{data.X_train.shape} -> "
@@ -140,6 +278,9 @@ def main():
                 {},
             ),
             return_predictions=False,
+            test_batch_size=(
+                args.test_batch_size
+            ),
         )
 
         wall_seconds = time.time() - start
