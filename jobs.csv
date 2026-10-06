@@ -1,3 +1,11 @@
 job_id,dataset,model,task,total_rows,train_rows,n_features,profile,cpus,mem_gb,time
-87,3-million-Sudoku-puzzles-with-ratings,tabpfn_v3.5_fast,regression,709877,473134,699,large,8,120,01:00:00
-87,Airlines_DepDelay_10M,tabpfn_v3.5_fast,regression,709877,473134,699,large,8,120,01:00:00
+87,delays_zurich_transport,xgboost,regression,709877,473134,699,large,8,120,01:00:00
+87,Airlines_DepDelay_10M,xgboost,regression,709877,473134,699,large,8,120,01:00:00
+87,friedman1,xgboost,regression,709877,473134,699,large,8,120,01:00:00
+87,jigsaw-unintended-bias-in-toxicity,xgboost,regression,709877,473134,699,large,8,120,01:00:00
+87,KDDCup99,xgboost,regression,709877,473134,699,large,8,120,01:00:00
+87,sf-police-incidents,xgboost,regression,709877,473134,699,large,8,120,01:00:00
+87,subset_higgs,xgboost,regression,709877,473134,699,large,8,120,01:00:00
+87,US_Accidents_March23,xgboost,regression,709877,473134,699,large,8,120,01:00:00
+87,world_food_wealth_bank,xgboost,regression,709877,473134,699,large,8,120,01:00:00
+87,mimic_extract_los_3,xgboost,regression,709877,473134,699,large,8,120,01:00:00

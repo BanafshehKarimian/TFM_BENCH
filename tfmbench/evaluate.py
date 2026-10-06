@@ -12,7 +12,18 @@ from .metrics import (
 
 from .models.registry import create_model
 
+CLASSIFICATION_TASKS = {
+    "classification",
+    "binclass",
+    "multiclass",
+}
 
+
+def _is_classification(task):
+    return (
+        str(task).lower()
+        in CLASSIFICATION_TASKS
+    )
 @dataclass
 class EvalResult:
     model_name: str
@@ -84,9 +95,6 @@ def _predict_batched(
 
     n_samples = len(X)
 
-    # ---------------------------------------------------------
-    # No batching
-    # ---------------------------------------------------------
 
     if batch_size is None:
         y_pred = model.predict(X)
@@ -97,16 +105,6 @@ def _predict_batched(
             y_proba = model.predict_proba(X)
 
         return y_pred, y_proba
-
-    if batch_size <= 0:
-        raise ValueError(
-            f"test_batch_size must be > 0 or None, "
-            f"got {batch_size}"
-        )
-
-    # ---------------------------------------------------------
-    # Batched inference
-    # ---------------------------------------------------------
 
     pred_batches = []
 
@@ -139,9 +137,6 @@ def _predict_batched(
             f"/ {n_samples:,}"
         )
 
-        # -------------------------
-        # Prediction
-        # -------------------------
 
         batch_pred = model.predict(
             X_batch
@@ -150,10 +145,6 @@ def _predict_batched(
         pred_batches.append(
             batch_pred
         )
-
-        # -------------------------
-        # Probabilities
-        # -------------------------
 
         if classification:
 
@@ -192,9 +183,6 @@ def evaluate(
     test_batch_size=None,
 ):
 
-    # ---------------------------------------------------------
-    # TabPFN token
-    # ---------------------------------------------------------
 
     if tabpfn_token:
         import os
@@ -207,9 +195,6 @@ def evaluate(
         model_kwargs or {}
     )
 
-    # ---------------------------------------------------------
-    # Create model
-    # ---------------------------------------------------------
 
     model = create_model(
         model_name=model_name,
@@ -219,9 +204,6 @@ def evaluate(
         **model_kwargs,
     )
 
-    # ---------------------------------------------------------
-    # Reset device memory statistics
-    # ---------------------------------------------------------
 
     if device.type == "cuda":
 
@@ -237,9 +219,6 @@ def evaluate(
 
         torch.mps.synchronize()
 
-    # =========================================================
-    # Fit
-    # =========================================================
 
     start = time.perf_counter()
 
@@ -259,9 +238,6 @@ def evaluate(
         - start
     )
 
-    # =========================================================
-    # Prediction
-    # =========================================================
 
     if device.type == "cuda":
         torch.cuda.synchronize()
@@ -277,8 +253,9 @@ def evaluate(
             X=data.X_test,
             batch_size=test_batch_size,
             classification=(
-                data.task
-                == "classification"
+                _is_classification(
+                    data.task
+                )
             ),
         )
     )
@@ -294,11 +271,10 @@ def evaluate(
         - start
     )
 
-    # =========================================================
-    # Metrics
-    # =========================================================
 
-    if data.task == "classification":
+    if _is_classification(
+                    data.task
+                ):
 
         metrics = (
             classification_metrics(
@@ -317,9 +293,6 @@ def evaluate(
             )
         )
 
-    # =========================================================
-    # Memory
-    # =========================================================
 
     peak_gpu_memory_mb = None
 
@@ -331,13 +304,6 @@ def evaluate(
             / 1024**2
         )
 
-    # Note:
-    # PyTorch currently does not provide an equivalent
-    # max_memory_allocated() metric for MPS.
-
-    # =========================================================
-    # Result
-    # =========================================================
 
     return EvalResult(
         model_name=model_name,

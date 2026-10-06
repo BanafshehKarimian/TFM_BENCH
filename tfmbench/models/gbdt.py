@@ -1,9 +1,7 @@
-import json
-import warnings
-
+import gc
+import optuna
 import numpy as np
 import pandas as pd
-
 from sklearn.metrics import (
     accuracy_score,
     balanced_accuracy_score,
@@ -14,18 +12,10 @@ from sklearn.metrics import (
     mean_squared_error,
     r2_score,
 )
-
-from sklearn.model_selection import (
-    ParameterSampler,
-    train_test_split,
-)
-
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 from .base import BaseTFM
 
-
-# ============================================================
-# General helpers
-# ============================================================
 
 CLASSIFICATION_TASKS = {
     "classification",
@@ -41,7 +31,6 @@ def _is_classification(task):
 def _as_dataframe(X):
     if isinstance(X, pd.DataFrame):
         return X.copy()
-
     return pd.DataFrame(X)
 
 
@@ -57,44 +46,24 @@ def _to_numeric(series):
 
 
 def _to_string(series):
-    return series.astype("string")
+    values = series.astype("string")
+    missing = values.isna()
+    values = values.astype(object)
+    values.loc[missing] = None
+    return values
 
 
 def _device_type(device):
-    """
-    Supports both:
-        torch.device("cuda")
-        "cuda"
-        "cuda:0"
-        "cpu"
-    """
-
     if hasattr(device, "type"):
         return device.type
-
     return str(device).split(":")[0]
 
 
-# ============================================================
-# Tuning split helpers
-# ============================================================
-
 def _can_stratify(y):
-    """
-    True when every class has at least 2 examples.
-    """
-
+    """True when every class has at least 2 examples."""
     y = _as_1d_y(y)
-
-    _, counts = np.unique(
-        y,
-        return_counts=True,
-    )
-
-    return (
-        len(counts) > 1
-        and counts.min() >= 2
-    )
+    _, counts = np.unique(y, return_counts=True)
+    return len(counts) > 1 and counts.min() >= 2
 
 
 def _make_tuning_indices(
@@ -105,52 +74,50 @@ def _make_tuning_indices(
     seed,
 ):
     """
-    Returns:
+    Build the HPO/calibration train-validation split.
 
-        tuning_train_indices
-        tuning_validation_indices
+    For classification:
+      - labels are assumed to already be encoded to 0..K-1
+      - every class is guaranteed to remain in TRAIN
+      - singleton/very rare classes are therefore safe
 
-    If tune_max_rows is set, HPO is done on at most that many
-    rows from the original training set.
-
-    Final ensemble training still uses ALL training rows.
+    For regression:
+      - regular random subsampling/splitting is used
     """
 
     y = _as_1d_y(y)
-
     n = len(y)
+
+    if n < 2:
+        raise ValueError(
+            "Need at least 2 rows."
+        )
+
+    if not (
+        0.0
+        < float(validation_fraction)
+        < 1.0
+    ):
+        raise ValueError(
+            "validation_fraction must be in (0, 1)."
+        )
 
     indices = np.arange(n)
 
-    # --------------------------------------------------------
-    # Optional HPO subsample
-    # --------------------------------------------------------
+    # ========================================================
+    # REGRESSION
+    # ========================================================
 
-    if (
-        tune_max_rows is not None
-        and n > tune_max_rows
-    ):
-
-        stratify = None
+    if not classification:
 
         if (
-            classification
-            and _can_stratify(y)
+            tune_max_rows is not None
+            and n > int(tune_max_rows)
         ):
-            stratify = y
 
-        try:
-            pool_indices, _ = train_test_split(
-                indices,
-                train_size=int(tune_max_rows),
-                random_state=seed,
-                stratify=stratify,
+            rng = np.random.default_rng(
+                seed
             )
-
-        except ValueError:
-            # Rare classes can occasionally make stratification
-            # impossible for the requested sample size.
-            rng = np.random.default_rng(seed)
 
             pool_indices = rng.choice(
                 indices,
@@ -158,39 +125,260 @@ def _make_tuning_indices(
                 replace=False,
             )
 
+        else:
+
+            pool_indices = indices
+
+        train_idx, val_idx = (
+            train_test_split(
+                pool_indices,
+                test_size=validation_fraction,
+                random_state=seed,
+            )
+        )
+
+        return (
+            np.asarray(train_idx),
+            np.asarray(val_idx),
+        )
+
+    # ========================================================
+    # CLASSIFICATION
+    # ========================================================
+
+    rng = np.random.default_rng(
+        seed
+    )
+
+    classes = np.unique(y)
+    n_classes = len(classes)
+
+    # --------------------------------------------------------
+    # Decide HPO pool size
+    # --------------------------------------------------------
+
+    if tune_max_rows is None:
+        pool_size = n
     else:
-        pool_indices = indices
+        pool_size = min(
+            int(tune_max_rows),
+            n,
+        )
+
+    if pool_size < n_classes:
+        raise ValueError(
+            f"HPO pool size {pool_size} "
+            f"is smaller than number of "
+            f"classes {n_classes}."
+        )
 
     # --------------------------------------------------------
-    # Tuning train / validation split
+    # First guarantee at least one row per class in pool.
     # --------------------------------------------------------
 
-    y_pool = y[pool_indices]
+    mandatory_pool = []
 
+    for cls in classes:
+
+        cls_indices = np.flatnonzero(
+            y == cls
+        )
+
+        chosen = rng.choice(
+            cls_indices
+        )
+
+        mandatory_pool.append(
+            chosen
+        )
+
+    mandatory_pool = np.asarray(
+        mandatory_pool,
+        dtype=int,
+    )
+
+    # --------------------------------------------------------
+    # Fill rest of pool
+    # --------------------------------------------------------
+
+    if pool_size > n_classes:
+
+        used_mask = np.zeros(
+            n,
+            dtype=bool,
+        )
+
+        used_mask[
+            mandatory_pool
+        ] = True
+
+        remaining_indices = indices[
+            ~used_mask
+        ]
+
+        n_extra = (
+            pool_size
+            - n_classes
+        )
+
+        extra = rng.choice(
+            remaining_indices,
+            size=n_extra,
+            replace=False,
+        )
+
+        pool_indices = np.concatenate([
+            mandatory_pool,
+            extra,
+        ])
+
+    else:
+
+        pool_indices = (
+            mandatory_pool.copy()
+        )
+
+    rng.shuffle(
+        pool_indices
+    )
+
+    # --------------------------------------------------------
+    # Now reserve one example of EACH class specifically
+    # for the TRAIN side.
+    # --------------------------------------------------------
+
+    y_pool = y[
+        pool_indices
+    ]
+
+    mandatory_train = []
+
+    for cls in classes:
+
+        cls_pool = pool_indices[
+            y_pool == cls
+        ]
+
+        if len(cls_pool) == 0:
+            raise RuntimeError(
+                f"Class {cls} disappeared "
+                f"from HPO pool."
+            )
+
+        mandatory_train.append(
+            rng.choice(
+                cls_pool
+            )
+        )
+
+    mandatory_train = np.asarray(
+        mandatory_train,
+        dtype=int,
+    )
+
+    reserved_mask = np.zeros(
+        n,
+        dtype=bool,
+    )
+
+    reserved_mask[
+        mandatory_train
+    ] = True
+
+    remaining_pool = pool_indices[
+        ~reserved_mask[
+            pool_indices
+        ]
+    ]
+
+    # --------------------------------------------------------
+    # Determine validation size.
+    # --------------------------------------------------------
+
+    target_val_size = int(
+        round(
+            pool_size
+            * validation_fraction
+        )
+    )
+
+    # train_test_split needs something left for train_extra.
+    if len(remaining_pool) <= 1:
+
+        raise ValueError(
+            "Not enough rows to create "
+            "a validation set."
+        )
+
+    target_val_size = min(
+        target_val_size,
+        len(remaining_pool) - 1,
+    )
+
+    target_val_size = max(
+        1,
+        target_val_size,
+    )
+
+    remaining_y = y[
+        remaining_pool
+    ]
+
+    # Stratify the non-mandatory rows if possible.
     stratify = None
 
-    if (
-        classification
-        and _can_stratify(y_pool)
+    if _can_stratify(
+        remaining_y
     ):
-        stratify = y_pool
+        stratify = remaining_y
 
     try:
-        train_idx, val_idx = train_test_split(
-            pool_indices,
-            test_size=validation_fraction,
-            random_state=seed,
-            stratify=stratify,
+
+        train_extra, val_idx = (
+            train_test_split(
+                remaining_pool,
+                test_size=target_val_size,
+                random_state=seed,
+                stratify=stratify,
+            )
         )
 
     except ValueError:
-        # Fall back if extremely rare classes make stratification
-        # impossible.
-        train_idx, val_idx = train_test_split(
-            pool_indices,
-            test_size=validation_fraction,
-            random_state=seed,
-            stratify=None,
+
+        train_extra, val_idx = (
+            train_test_split(
+                remaining_pool,
+                test_size=target_val_size,
+                random_state=seed,
+                stratify=None,
+            )
+        )
+
+    train_idx = np.concatenate([
+        mandatory_train,
+        train_extra,
+    ])
+
+    rng.shuffle(
+        train_idx
+    )
+
+    # --------------------------------------------------------
+    # Safety check:
+    # every class MUST exist in training.
+    # --------------------------------------------------------
+
+    train_classes = np.unique(
+        y[train_idx]
+    )
+
+    if not np.array_equal(
+        train_classes,
+        classes,
+    ):
+        raise RuntimeError(
+            "HPO training split lost one "
+            "or more classes."
         )
 
     return (
@@ -199,103 +387,51 @@ def _make_tuning_indices(
     )
 
 
-# ============================================================
-# Tuning objective
-# ============================================================
-
-def _classification_score(
-    model,
-    X,
-    y,
-    metric,
-):
-    """
-    Returns:
-        raw_score,
-        utility
-
-    utility is ALWAYS higher-is-better.
-    """
-
+def _classification_score(model, X, y, metric):
     y = _as_1d_y(y)
-
     metric = str(metric).lower()
 
     if metric == "accuracy":
-
         pred = model.predict(X)
-
-        value = accuracy_score(
-            y,
-            pred,
-        )
-
+        value = accuracy_score(y, pred)
         return value, value
 
     if metric == "balanced_accuracy":
-
         pred = model.predict(X)
-
-        value = balanced_accuracy_score(
-            y,
-            pred,
-        )
-
+        value = balanced_accuracy_score(y, pred)
         return value, value
 
     if metric == "f1_macro":
-
         pred = model.predict(X)
-
         value = f1_score(
             y,
             pred,
             average="macro",
             zero_division=0,
         )
-
         return value, value
 
     if metric == "log_loss":
-
         proba = model.predict_proba(X)
-
-        classes = np.asarray(
-            model.classes_
-        )
-
+        classes = np.asarray(model.classes_)
         value = log_loss(
             y,
             proba,
             labels=classes,
         )
-
-        # smaller is better
         return value, -value
 
     if metric == "roc_auc":
-
         proba = model.predict_proba(X)
-
-        classes = np.asarray(
-            model.classes_
-        )
+        classes = np.asarray(model.classes_)
 
         if len(classes) == 2:
-
-            # Explicit binary target so this also works
-            # with non-0/1 class labels.
-            y_binary = (
-                y == classes[1]
-            ).astype(int)
-
+            y_binary = (y == classes[1]).astype(int)
             value = roc_auc_score(
                 y_binary,
                 proba[:, 1],
             )
-
         else:
-
             value = roc_auc_score(
                 y,
                 proba,
@@ -311,55 +447,21 @@ def _classification_score(
     )
 
 
-def _regression_score(
-    model,
-    X,
-    y,
-    metric,
-):
-    """
-    Returns:
-        raw_score,
-        utility
-
-    utility is ALWAYS higher-is-better.
-    """
-
+def _regression_score(model, X, y, metric):
     y = _as_1d_y(y)
-
-    pred = np.asarray(
-        model.predict(X)
-    ).reshape(-1)
-
+    pred = np.asarray(model.predict(X)).reshape(-1)
     metric = str(metric).lower()
 
     if metric == "rmse":
-
-        value = np.sqrt(
-            mean_squared_error(
-                y,
-                pred,
-            )
-        )
-
+        value = np.sqrt(mean_squared_error(y, pred))
         return value, -value
 
     if metric == "mae":
-
-        value = mean_absolute_error(
-            y,
-            pred,
-        )
-
+        value = mean_absolute_error(y, pred)
         return value, -value
 
     if metric == "r2":
-
-        value = r2_score(
-            y,
-            pred,
-        )
-
+        value = r2_score(y, pred)
         return value, value
 
     raise ValueError(
@@ -374,9 +476,7 @@ def _score_candidate(
     classification,
     metric,
 ):
-
     if classification:
-
         return _classification_score(
             model,
             X,
@@ -392,241 +492,289 @@ def _score_candidate(
     )
 
 
-# ============================================================
-# Parameter spaces
-# ============================================================
+def _resolve_hpo_budget(
+    n_rows,
+    n_trials=None,
+    tune_max_rows=None,
+):
+    n_rows = int(n_rows)
 
-DEFAULT_XGB_SEARCH_SPACE = {
+    if n_rows <= 200_000:
+        default_rows = n_rows
+        default_trials = 100
+    elif n_rows <= 1_000_000:
+        default_rows = 500_000
+        default_trials = 75
+    elif n_rows <= 5_000_000:
+        default_rows = 750_000
+        default_trials = 60
+    else:
+        default_rows = 1_000_000
+        default_trials = 50
 
-    "n_estimators": [
-        300,
-        500,
-        800,
-        1200,
-    ],
+    if tune_max_rows is None:
+        tune_max_rows = default_rows
 
-    "learning_rate": [
-        0.02,
-        0.03,
-        0.05,
-        0.1,
-    ],
+    if n_trials is None:
+        n_trials = default_trials
 
-    "max_depth": [
-        4,
-        6,
-        8,
-        10,
-    ],
+    tune_max_rows = min(
+        max(2, int(tune_max_rows)),
+        n_rows,
+    )
 
-    "min_child_weight": [
-        1,
-        3,
-        5,
-        10,
-    ],
+    n_trials = max(1, int(n_trials))
 
-    "subsample": [
-        0.6,
-        0.8,
-        1.0,
-    ],
-
-    "colsample_bytree": [
-        0.6,
-        0.8,
-        1.0,
-    ],
-
-    "reg_alpha": [
-        0.0,
-        0.01,
-        0.1,
-        1.0,
-        10.0,
-    ],
-
-    "reg_lambda": [
-        0.1,
-        1.0,
-        10.0,
-    ],
-}
+    return tune_max_rows, n_trials
 
 
-DEFAULT_CATBOOST_SEARCH_SPACE = {
-
-    "iterations": [
-        300,
-        500,
-        800,
-        1200,
-    ],
-
-    "learning_rate": [
-        0.02,
-        0.03,
-        0.05,
-        0.1,
-    ],
-
-    "depth": [
-        4,
-        6,
-        8,
-        10,
-    ],
-
-    "l2_leaf_reg": [
-        1.0,
-        3.0,
-        10.0,
-        30.0,
-    ],
-
-    "random_strength": [
-        0.0,
-        0.5,
-        1.0,
-        2.0,
-    ],
-
-    "border_count": [
-        64,
-        128,
-        254,
-    ],
-}
+def _default_classification_metric(y):
+    n_classes = len(np.unique(_as_1d_y(y)))
+    return "roc_auc" if n_classes == 2 else "balanced_accuracy"
 
 
-# ============================================================
-# XGBoost
-# ============================================================
+def _sample_custom_space(trial, search_space):
+    params = {}
+
+    for name, values in search_space.items():
+        if callable(values):
+            params[name] = values(trial)
+        else:
+            params[name] = trial.suggest_categorical(
+                name,
+                list(values),
+            )
+
+    return params
+
+
+def _suggest_xgb_params(trial):
+    return {
+        "learning_rate": trial.suggest_float(
+            "learning_rate",
+            0.01,
+            0.20,
+            log=True,
+        ),
+        "max_depth": trial.suggest_int(
+            "max_depth",
+            3,
+            12,
+        ),
+        "min_child_weight": trial.suggest_float(
+            "min_child_weight",
+            0.5,
+            30.0,
+            log=True,
+        ),
+        "subsample": trial.suggest_float(
+            "subsample",
+            0.5,
+            1.0,
+        ),
+        "colsample_bytree": trial.suggest_float(
+            "colsample_bytree",
+            0.5,
+            1.0,
+        ),
+        "reg_alpha": trial.suggest_float(
+            "reg_alpha",
+            1e-8,
+            10.0,
+            log=True,
+        ),
+        "reg_lambda": trial.suggest_float(
+            "reg_lambda",
+            1e-3,
+            100.0,
+            log=True,
+        ),
+        "gamma": trial.suggest_float(
+            "gamma",
+            1e-8,
+            10.0,
+            log=True,
+        ),
+        "max_bin": trial.suggest_categorical(
+            "max_bin",
+            [128, 256, 512],
+        ),
+    }
+
+
+def _suggest_catboost_params(trial):
+    return {
+        "learning_rate": trial.suggest_float(
+            "learning_rate",
+            0.01,
+            0.20,
+            log=True,
+        ),
+        "depth": trial.suggest_int(
+            "depth",
+            4,
+            10,
+        ),
+        "l2_leaf_reg": trial.suggest_float(
+            "l2_leaf_reg",
+            1e-2,
+            100.0,
+            log=True,
+        ),
+        "random_strength": trial.suggest_float(
+            "random_strength",
+            1e-3,
+            10.0,
+            log=True,
+        ),
+        "border_count": trial.suggest_categorical(
+            "border_count",
+            [64, 128, 254],
+        ),
+    }
+
+
+def _xgb_early_stopping_metric(
+    classification,
+    tuning_metric,
+    y_train,
+):
+    tuning_metric = str(tuning_metric).lower()
+
+    if not classification:
+        if tuning_metric == "mae":
+            return "mae"
+        return "rmse"
+
+    n_classes = len(np.unique(_as_1d_y(y_train)))
+
+    if n_classes == 2:
+        if tuning_metric == "roc_auc":
+            return "auc"
+        return "logloss"
+    return "mlogloss"
+
+
+def _catboost_eval_metric(
+    classification,
+    tuning_metric,
+    y_train,
+):
+    tuning_metric = str(tuning_metric).lower()
+
+    if not classification:
+        if tuning_metric == "mae":
+            return "MAE"
+        if tuning_metric == "r2":
+            return "R2"
+        return "RMSE"
+
+    n_classes = len(np.unique(_as_1d_y(y_train)))
+
+    if n_classes == 2:
+        if tuning_metric == "roc_auc":
+            return "AUC"
+        if tuning_metric == "balanced_accuracy":
+            return "BalancedAccuracy"
+        if tuning_metric == "accuracy":
+            return "Accuracy"
+        if tuning_metric == "f1_macro":
+            return "F1"
+        return "Logloss"
+    return "MultiClass"
 
 class XGBoostAdapter(BaseTFM):
-
     def __init__(
         self,
         task,
         device,
         seed,
-
-        # ----------------------------------------------------
-        # Tuning
-        # ----------------------------------------------------
-
+        # HPO
         tune=True,
-        n_trials=20,
+        n_trials=None,
         validation_fraction=0.20,
-
-        # HPO only uses this many rows.
-        # Final ensemble is still fit on ALL rows.
-        tune_max_rows=200_000,
-
+        tune_max_rows=None,
         tuning_metric=None,
-
         search_space=None,
+        # Stage-1 early stopping
+        max_estimators=5000,
+        early_stopping_rounds=100,
 
-        # ----------------------------------------------------
-        # Ensemble
-        # ----------------------------------------------------
+        # Stage-2 round calibration
+        calibrate_rounds=True,
+        round_calibration_fraction=0.20,
 
+        # None = use ALL available training rows
+        round_calibration_max_rows=None,
+
+        # Final ensemble
         n_ensemble=5,
-
-        # Number of best HPO configurations allowed into
-        # the final ensemble.
-        ensemble_top_k=3,
-
+        ensemble_top_k=None,
         **kwargs,
     ):
-
         super().__init__(
             task=task,
             device=device,
             seed=seed,
         )
 
-        self.classification = (
-            _is_classification(task)
-        )
+        self.classification = _is_classification(task)
+        self.device_type = _device_type(device)
 
-        self.device_type = (
-            _device_type(device)
-        )
+        self.tune = bool(tune)
+        self.n_trials = n_trials
+        self.validation_fraction = float(validation_fraction)
+        self.tune_max_rows = tune_max_rows
+        self.tuning_metric = tuning_metric
+        self.search_space = search_space
 
-        self.tune = tune
-        self.n_trials = int(n_trials)
+        self.max_estimators = int(max_estimators)
+        self.early_stopping_rounds = int(early_stopping_rounds)
+        self.n_ensemble = int(n_ensemble)
 
-        self.validation_fraction = (
-            float(validation_fraction)
-        )
+        if self.max_estimators < 1:
+            raise ValueError("max_estimators must be >= 1.")
+        if self.early_stopping_rounds < 1:
+            raise ValueError("early_stopping_rounds must be >= 1.")
+        if self.n_ensemble < 1:
+            raise ValueError("n_ensemble must be >= 1.")
 
-        self.tune_max_rows = (
-            tune_max_rows
-        )
-
-        if tuning_metric is None:
-
-            if self.classification:
-                tuning_metric = (
-                    "balanced_accuracy"
-                )
-            else:
-                tuning_metric = "rmse"
-
-        self.tuning_metric = (
-            tuning_metric
-        )
-
-        self.search_space = (
-            search_space
-            if search_space is not None
-            else DEFAULT_XGB_SEARCH_SPACE
-        )
-
-        self.n_ensemble = int(
-            n_ensemble
-        )
-
-        self.ensemble_top_k = int(
-            ensemble_top_k
-        )
-
-        # Fixed params supplied by caller.
-        #
-        # Search parameters override these during tuning.
-        self.base_model_kwargs = dict(
-            kwargs
-        )
+        self.base_model_kwargs = dict(kwargs)
 
         self._category_levels = {}
-
         self._models = []
-
-        # Keep compatibility with code that expects _model
         self._model = None
-
+        self._label_encoder = None
         self._classes = None
 
         self.best_params_ = None
+        self.best_iteration_ = None
+        self.best_n_estimators_ = None
+        self.best_validation_score_ = None
         self.tuning_results_ = []
         self.ensemble_params_ = []
-
-
-    # ========================================================
-    # Model creation
-    # ========================================================
-
-    def _make_model(
-        self,
-        params,
-        seed,
-    ):
-
-        from xgboost import (
-            XGBClassifier,
-            XGBRegressor,
+        self.study_ = None
+        self.hpo_n_rows_ = None
+        self.hpo_n_trials_ = None
+        self.calibrate_rounds = bool(
+            calibrate_rounds
         )
+
+        self.round_calibration_fraction = float(
+            round_calibration_fraction
+        )
+
+        self.round_calibration_max_rows = (
+            round_calibration_max_rows
+        )
+        self.stage1_best_n_estimators_ = None
+
+        self.round_calibration_n_rows_ = None
+        self.round_calibration_score_ = None
+
+
+    def _make_model(self, params, seed):
+        from xgboost import XGBClassifier, XGBRegressor
 
         xgb_device = (
             "cuda"
@@ -642,171 +790,361 @@ class XGBoostAdapter(BaseTFM):
             "enable_categorical": True,
         }
 
-        # Explicit caller kwargs
-        common_kwargs.update(
-            self.base_model_kwargs
-        )
-
-        # Tuned parameters win
-        common_kwargs.update(
-            params
-        )
+        common_kwargs.update(self.base_model_kwargs)
+        common_kwargs.update(params)
 
         if self.classification:
+            return XGBClassifier(**common_kwargs)
 
-            return XGBClassifier(
-                **common_kwargs
-            )
+        return XGBRegressor(**common_kwargs)
 
-        return XGBRegressor(
-            **common_kwargs
-        )
-
-
-    # ========================================================
-    # XGBoost preprocessing
-    # ========================================================
-
-    def _fit_preprocessor(
-        self,
-        X,
-    ):
-
+    def _fit_preprocessor(self, X):
         X = _as_dataframe(X)
-
         self._category_levels = {}
 
         for col in X.columns:
-
             col_name = str(col)
 
-            # ------------------------------------------------
-            # TALENT numeric
-            # ------------------------------------------------
+            if col_name.startswith("num_"):
+                X[col] = _to_numeric(X[col])
+                continue
 
-            if col_name.startswith(
-                "num_"
-            ):
-
-                X[col] = _to_numeric(
-                    X[col]
-                )
-
-            # ------------------------------------------------
-            # TALENT categorical
-            # ------------------------------------------------
-
-            elif col_name.startswith(
-                "cat_"
-            ):
-
-                values = _to_string(
-                    X[col]
-                )
-
+            if col_name.startswith("cat_"):
+                values = _to_string(X[col])
                 categories = pd.Index(
-                    values
-                    .dropna()
-                    .unique()
+                    values.dropna().unique(),
+                    dtype=object,
                 )
+                self._category_levels[col] = categories
+                X[col] = pd.Categorical(
+                    values,
+                    categories=categories,
+                )
+                continue
 
-                self._category_levels[
-                    col
-                ] = categories
-
+            try:
+                X[col] = pd.to_numeric(
+                    X[col],
+                    errors="raise",
+                ).astype(np.float32)
+            except (ValueError, TypeError):
+                values = _to_string(X[col])
+                categories = pd.Index(
+                    values.dropna().unique(),
+                    dtype=object,
+                )
+                self._category_levels[col] = categories
                 X[col] = pd.Categorical(
                     values,
                     categories=categories,
                 )
 
-            # ------------------------------------------------
-            # Fallback
-            # ------------------------------------------------
-
-            else:
-
-                try:
-
-                    X[col] = pd.to_numeric(
-                        X[col],
-                        errors="raise",
-                    ).astype(
-                        np.float32
-                    )
-
-                except (
-                    ValueError,
-                    TypeError,
-                ):
-
-                    values = _to_string(
-                        X[col]
-                    )
-
-                    categories = pd.Index(
-                        values
-                        .dropna()
-                        .unique()
-                    )
-
-                    self._category_levels[
-                        col
-                    ] = categories
-
-                    X[col] = pd.Categorical(
-                        values,
-                        categories=categories,
-                    )
-
         return X
 
-
-    def _transform_X(
-        self,
-        X,
-    ):
-
+    def _transform_X(self, X):
         X = _as_dataframe(X)
 
         for col in X.columns:
-
             if col in self._category_levels:
-
-                values = _to_string(
-                    X[col]
-                )
-
+                values = _to_string(X[col])
                 X[col] = pd.Categorical(
                     values,
-                    categories=(
-                        self._category_levels[
-                            col
-                        ]
-                    ),
+                    categories=self._category_levels[col],
                 )
-
-                # Unseen categories become NaN.
-
             else:
-
-                X[col] = _to_numeric(
-                    X[col]
-                )
+                X[col] = _to_numeric(X[col])
 
         return X
 
 
-    # ========================================================
-    # HPO
-    # ========================================================
+    def _tune_parameters(self, X, y):
+        y = _as_1d_y(y)
 
-    def _tune_parameters(
+        tune_max_rows, n_trials = _resolve_hpo_budget(
+            n_rows=len(y),
+            n_trials=self.n_trials,
+            tune_max_rows=self.tune_max_rows,
+        )
+
+        self.hpo_n_rows_ = tune_max_rows
+        self.hpo_n_trials_ = n_trials
+
+        print(
+            f"[XGBoost HPO] rows={tune_max_rows:,}, "
+            f"trials={n_trials}"
+        )
+
+        tuning_metric = self.tuning_metric
+        if tuning_metric is None:
+            if self.classification:
+                tuning_metric = _default_classification_metric(y)
+            else:
+                tuning_metric = "rmse"
+
+        self.tuning_metric = tuning_metric
+
+        print(
+            f"[XGBoost HPO] metric={tuning_metric}"
+        )
+
+        train_idx, val_idx = _make_tuning_indices(
+            y=y,
+            classification=self.classification,
+            validation_fraction=self.validation_fraction,
+            tune_max_rows=tune_max_rows,
+            seed=self.seed,
+        )
+
+        X_raw = _as_dataframe(X)
+        X_train_raw = X_raw.iloc[train_idx].copy()
+        X_val_raw = X_raw.iloc[val_idx].copy()
+
+        y_train = y[train_idx]
+        y_val = y[val_idx]
+
+        X_train = self._fit_preprocessor(X_train_raw)
+        X_val = self._transform_X(X_val_raw)
+
+        native_metric = _xgb_early_stopping_metric(
+            classification=self.classification,
+            tuning_metric=tuning_metric,
+            y_train=y_train,
+        )
+
+        trial_results = []
+
+        def objective(trial):
+            if self.search_space is None:
+                params = _suggest_xgb_params(trial)
+            else:
+                params = _sample_custom_space(
+                    trial,
+                    self.search_space,
+                )
+
+            model_params = dict(params)
+            model_params["n_estimators"] = self.max_estimators
+            model_params[
+                "early_stopping_rounds"
+            ] = self.early_stopping_rounds
+            model_params["eval_metric"] = native_metric
+
+            model = self._make_model(
+                params=model_params,
+                seed=self.seed,
+            )
+
+            try:
+                model.fit(
+                    X_train,
+                    y_train,
+                    eval_set=[(X_val, y_val)],
+                    verbose=False,
+                )
+
+                raw_score, utility = _score_candidate(
+                    model=model,
+                    X=X_val,
+                    y=y_val,
+                    classification=self.classification,
+                    metric=tuning_metric,
+                )
+
+                best_iteration = getattr(
+                    model,
+                    "best_iteration",
+                    None,
+                )
+
+                if best_iteration is None:
+                    best_n_estimators = self.max_estimators
+                else:
+                    best_n_estimators = int(best_iteration) + 1
+
+                trial.set_user_attr(
+                    "raw_score",
+                    float(raw_score),
+                )
+                trial.set_user_attr(
+                    "best_n_estimators",
+                    int(best_n_estimators),
+                )
+
+                trial_results.append({
+                    "trial": trial.number,
+                    "params": dict(params),
+                    "validation_score": float(raw_score),
+                    "utility": float(utility),
+                    "best_n_estimators": int(best_n_estimators),
+                    "status": "success",
+                })
+
+                return float(utility)
+
+            except Exception as exc:
+
+                print(
+                    f"\n[XGBoost HPO] Trial {trial.number} FAILED"
+                )
+                print(
+                    f"{type(exc).__name__}: {exc}"
+                )
+
+                trial_results.append({
+                    "trial": trial.number,
+                    "params": dict(params),
+                    "validation_score": None,
+                    "utility": float("-inf"),
+                    "best_n_estimators": None,
+                    "status": "failed",
+                    "error": repr(exc),
+                })
+
+                raise optuna.TrialPruned(
+                    str(exc)
+                )
+
+            finally:
+                del model
+                gc.collect()
+
+        sampler = optuna.samplers.TPESampler(
+            seed=self.seed,
+        )
+
+        study = optuna.create_study(
+            direction="maximize",
+            sampler=sampler,
+        )
+
+        self.study_ = study
+
+        study.optimize(
+            objective,
+            n_trials=n_trials,
+            show_progress_bar=False,
+        )
+
+        completed = [
+            trial
+            for trial in study.trials
+            if trial.state == optuna.trial.TrialState.COMPLETE
+        ]
+
+        if not completed:
+
+            failed_errors = [
+                r["error"]
+                for r in trial_results
+                if r["status"] == "failed"
+            ]
+
+            unique_errors = list(
+                dict.fromkeys(
+                    failed_errors
+                )
+            )
+
+            error_text = "\n".join(
+                f"  - {e}"
+                for e in unique_errors[:5]
+            )
+
+            raise RuntimeError(
+                "All XGBoost tuning trials failed.\n"
+                "Example underlying errors:\n"
+                f"{error_text}"
+            )
+
+        best_trial = study.best_trial
+
+        # selects STRUCTURAL hyperparameters.
+
+        best_params = dict(
+            best_trial.params
+        )
+
+        stage1_best_n_estimators = int(
+            best_trial.user_attrs[
+                "best_n_estimators"
+            ]
+        )
+
+        self.stage1_best_n_estimators_ = (
+            stage1_best_n_estimators
+        )
+
+        self.best_validation_score_ = float(
+            best_trial.user_attrs[
+                "raw_score"
+            ]
+        )
+
+        self.tuning_results_ = (
+            trial_results
+        )
+
+        print(
+            f"[XGBoost HPO Stage 1] "
+            f"best score="
+            f"{self.best_validation_score_:.6f}"
+        )
+
+        print(
+            f"[XGBoost HPO Stage 1] "
+            f"temporary best trees="
+            f"{stage1_best_n_estimators}"
+        )
+
+        print(
+            f"[XGBoost HPO Stage 1] "
+            f"best structural params="
+            f"{best_params}"
+        )
+
+        return best_params
+
+    def _calibrate_n_estimators(
         self,
         X,
         y,
+        structural_params,
     ):
+        """
+        Stage 2 of HPO.
+
+        Structural hyperparameters are FIXED.
+
+        A larger/full training sample is split into
+        calibration-train/calibration-validation.
+
+        We then use early stopping once to determine the
+        appropriate tree count at the real dataset scale.
+        """
 
         y = _as_1d_y(y)
+
+        calibration_max_rows = (
+            self.round_calibration_max_rows
+        )
+
+        if calibration_max_rows is None:
+            calibration_max_rows = len(y)
+
+        calibration_max_rows = min(
+            int(calibration_max_rows),
+            len(y),
+        )
+
+        self.round_calibration_n_rows_ = (
+            calibration_max_rows
+        )
+
+        print(
+            f"[XGBoost HPO Stage 2] "
+            f"Calibrating tree count on "
+            f"{calibration_max_rows:,} rows"
+        )
 
         train_idx, val_idx = (
             _make_tuning_indices(
@@ -815,234 +1153,300 @@ class XGBoostAdapter(BaseTFM):
                     self.classification
                 ),
                 validation_fraction=(
-                    self.validation_fraction
+                    self.round_calibration_fraction
                 ),
                 tune_max_rows=(
-                    self.tune_max_rows
+                    calibration_max_rows
                 ),
-                seed=self.seed,
+                seed=self.seed + 1,
             )
         )
 
         X_raw = _as_dataframe(X)
 
-        X_train_raw = X_raw.iloc[
+        X_train_raw = (
+            X_raw.iloc[
+                train_idx
+            ].copy()
+        )
+
+        X_val_raw = (
+            X_raw.iloc[
+                val_idx
+            ].copy()
+        )
+
+        y_train = y[
             train_idx
-        ].copy()
-
-        X_val_raw = X_raw.iloc[
-            val_idx
-        ].copy()
-
-        y_train = y[train_idx]
-        y_val = y[val_idx]
-
-        # ----------------------------------------------------
-        # IMPORTANT:
-        # Fit categorical vocabulary on internal HPO TRAIN,
-        # not validation.
-        # ----------------------------------------------------
-
-        X_train = self._fit_preprocessor(
-            X_train_raw
-        )
-
-        X_val = self._transform_X(
-            X_val_raw
-        )
-
-        sampler = ParameterSampler(
-            self.search_space,
-            n_iter=self.n_trials,
-            random_state=self.seed,
-        )
-
-        trial_results = []
-
-        for trial_id, params in enumerate(
-            sampler
-        ):
-
-            model = self._make_model(
-                params=params,
-                seed=(
-                    self.seed
-                    + trial_id
-                ),
-            )
-
-            try:
-
-                model.fit(
-                    X_train,
-                    y_train,
-                )
-
-                raw_score, utility = (
-                    _score_candidate(
-                        model=model,
-                        X=X_val,
-                        y=y_val,
-                        classification=(
-                            self.classification
-                        ),
-                        metric=(
-                            self.tuning_metric
-                        ),
-                    )
-                )
-
-                trial_results.append({
-                    "trial": trial_id,
-                    "params": dict(params),
-                    "validation_score": (
-                        float(raw_score)
-                    ),
-                    "utility": (
-                        float(utility)
-                    ),
-                    "status": "success",
-                })
-
-            except Exception as exc:
-
-                trial_results.append({
-                    "trial": trial_id,
-                    "params": dict(params),
-                    "validation_score": None,
-                    "utility": (
-                        float("-inf")
-                    ),
-                    "status": "failed",
-                    "error": repr(exc),
-                })
-
-            finally:
-
-                del model
-
-        valid_trials = [
-            trial
-            for trial in trial_results
-            if trial["status"] == "success"
         ]
 
-        if not valid_trials:
+        y_val = y[
+            val_idx
+        ]
 
-            raise RuntimeError(
-                "All XGBoost tuning trials failed."
-            )
-
-        valid_trials.sort(
-            key=lambda x: x["utility"],
-            reverse=True,
+        print(
+            f"[XGBoost HPO Stage 2] "
+            f"train={len(y_train):,}, "
+            f"val={len(y_val):,}"
         )
 
-        self.tuning_results_ = (
-            trial_results
+
+        X_train = (
+            self._fit_preprocessor(
+                X_train_raw
+            )
+        )
+
+        X_val = (
+            self._transform_X(
+                X_val_raw
+            )
+        )
+
+
+        native_metric = (
+            _xgb_early_stopping_metric(
+                classification=(
+                    self.classification
+                ),
+                tuning_metric=(
+                    self.tuning_metric
+                ),
+                y_train=y_train,
+            )
+        )
+
+        model_params = dict(
+            structural_params
+        )
+
+        model_params[
+            "n_estimators"
+        ] = self.max_estimators
+
+        model_params[
+            "early_stopping_rounds"
+        ] = (
+            self.early_stopping_rounds
+        )
+
+        model_params[
+            "eval_metric"
+        ] = native_metric
+
+        model = self._make_model(
+            params=model_params,
+            seed=self.seed,
+        )
+
+        try:
+
+            model.fit(
+                X_train,
+                y_train,
+                eval_set=[
+                    (
+                        X_val,
+                        y_val,
+                    )
+                ],
+                verbose=False,
+            )
+
+            best_iteration = getattr(
+                model,
+                "best_iteration",
+                None,
+            )
+
+            if best_iteration is None:
+
+                best_n_estimators = (
+                    self.max_estimators
+                )
+
+            else:
+
+                best_n_estimators = (
+                    int(best_iteration)
+                    + 1
+                )
+
+            raw_score, _ = (
+                _score_candidate(
+                    model=model,
+                    X=X_val,
+                    y=y_val,
+                    classification=(
+                        self.classification
+                    ),
+                    metric=(
+                        self.tuning_metric
+                    ),
+                )
+            )
+
+            self.round_calibration_score_ = (
+                float(raw_score)
+            )
+
+        finally:
+
+            del model
+            gc.collect()
+
+
+        final_params = dict(
+            structural_params
+        )
+
+        final_params[
+            "n_estimators"
+        ] = int(
+            best_n_estimators
+        )
+
+        self.best_n_estimators_ = int(
+            best_n_estimators
+        )
+
+        self.best_iteration_ = (
+            int(best_n_estimators)
+            - 1
         )
 
         self.best_params_ = dict(
-            valid_trials[0]["params"]
+            final_params
         )
 
-        # ----------------------------------------------------
-        # Keep top unique configurations
-        # ----------------------------------------------------
+        print(
+            f"[XGBoost HPO Stage 2] "
+            f"score="
+            f"{self.round_calibration_score_:.6f}"
+        )
 
-        top_configs = []
+        print(
+            f"[XGBoost HPO Stage 2] "
+            f"best trees="
+            f"{best_n_estimators}"
+        )
 
-        seen = set()
+        print(
+            f"[XGBoost HPO] "
+            f"final params="
+            f"{final_params}"
+        )
 
-        for trial in valid_trials:
-
-            params = dict(
-                trial["params"]
-            )
-
-            signature = json.dumps(
-                params,
-                sort_keys=True,
-                default=str,
-            )
-
-            if signature in seen:
-                continue
-
-            seen.add(signature)
-
-            top_configs.append(
-                params
-            )
-
-            if (
-                len(top_configs)
-                >= self.ensemble_top_k
-            ):
-                break
-
-        return top_configs
+        return final_params
 
 
-    # ========================================================
-    # Fit
-    # ========================================================
-
-    def fit(
-        self,
-        X,
-        y,
-    ):
+    def fit(self, X, y):
 
         y = _as_1d_y(y)
+        if self.classification:
 
-        # ----------------------------------------------------
-        # Tune
-        # ----------------------------------------------------
+            self._label_encoder = (
+                LabelEncoder()
+            )
 
-        if self.tune:
+            y_model = (
+                self._label_encoder
+                .fit_transform(y)
+            )
 
-            top_configs = (
-                self._tune_parameters(
-                    X,
-                    y,
-                )
+            # Keep ORIGINAL labels here.
+            self._classes = np.asarray(
+                self._label_encoder.classes_
+            )
+
+            print(
+                f"[XGBoost] "
+                f"{len(self._classes)} classes"
+            )
+
+            print(
+                "[XGBoost] original classes:",
+                self._classes,
+            )
+
+            print(
+                "[XGBoost] encoded classes:",
+                np.unique(y_model),
             )
 
         else:
 
-            top_configs = [
-                {}
-            ]
+            y_model = y
 
+        # structural hyperparameter tuning
+
+        if self.tune:
+
+            structural_config = (
+                self._tune_parameters(
+                    X,
+                    y_model,
+                )
+            )
+
+            # recalibrate tree count at larger/full scale
+
+            if self.calibrate_rounds:
+
+                best_config = (
+                    self._calibrate_n_estimators(
+                        X,
+                        y_model,
+                        structural_config,
+                    )
+                )
+
+            else:
+
+                best_config = dict(
+                    structural_config
+                )
+
+                best_config[
+                    "n_estimators"
+                ] = int(
+                    self.stage1_best_n_estimators_
+                )
+
+                self.best_n_estimators_ = int(
+                    self.stage1_best_n_estimators_
+                )
+
+                self.best_iteration_ = (
+                    self.best_n_estimators_
+                    - 1
+                )
+
+                self.best_params_ = dict(
+                    best_config
+                )
+
+        else:
+
+            best_config = {}
             self.best_params_ = {}
 
-        # ----------------------------------------------------
-        # IMPORTANT:
-        # Refit preprocessing on ALL training data.
-        # ----------------------------------------------------
+        # refit preprocessing on ALL available training rows
 
-        X_full = self._fit_preprocessor(
-            X
+        X_full = (
+            self._fit_preprocessor(
+                X
+            )
         )
-
-        # ----------------------------------------------------
-        # Fit final ensemble
-        # ----------------------------------------------------
 
         self._models = []
         self.ensemble_params_ = []
 
+        # Final full-data ensemble
+
         for ensemble_id in range(
             self.n_ensemble
         ):
-
-            config = dict(
-                top_configs[
-                    ensemble_id
-                    % len(top_configs)
-                ]
-            )
 
             ensemble_seed = (
                 self.seed
@@ -1051,13 +1455,13 @@ class XGBoostAdapter(BaseTFM):
             )
 
             model = self._make_model(
-                params=config,
+                params=best_config,
                 seed=ensemble_seed,
             )
 
             model.fit(
                 X_full,
-                y,
+                y_model,
             )
 
             self._models.append(
@@ -1066,48 +1470,39 @@ class XGBoostAdapter(BaseTFM):
 
             self.ensemble_params_.append({
                 "seed": ensemble_seed,
-                "params": config,
+                "params": dict(
+                    best_config
+                ),
             })
 
         self._model = (
             self._models[0]
         )
 
-        if self.classification:
-
-            self._classes = np.asarray(
-                self._model.classes_
-            )
-
         return self
-
-
-    # ========================================================
-    # Prediction
-    # ========================================================
 
     @property
     def classes_(self):
-
         if not self.classification:
             return None
-
         return self._classes
 
-
-    def predict_proba(
-        self,
-        X,
-    ):
-
+    def predict_proba(self, X):
         if not self.classification:
             return None
 
-        X = self._transform_X(
-            X
-        )
+        if self._label_encoder is None:
+            raise RuntimeError(
+                "Label encoder is not fitted."
+            )
+
+        X = self._transform_X(X)
 
         probabilities = []
+
+        n_classes = len(
+            self._classes
+        )
 
         for model in self._models:
 
@@ -1115,46 +1510,43 @@ class XGBoostAdapter(BaseTFM):
                 model.predict_proba(X)
             )
 
-            model_classes = np.asarray(
-                model.classes_
+            # model.classes_ are encoded class IDs.
+            encoded_classes = np.asarray(
+                model.classes_,
+                dtype=int,
             )
 
-            # Usually identical, but align defensively.
-            if np.array_equal(
-                model_classes,
-                self._classes,
+            aligned = np.zeros(
+                (
+                    len(X),
+                    n_classes,
+                ),
+                dtype=np.float64,
+            )
+
+            for j, encoded_cls in enumerate(
+                encoded_classes
             ):
 
-                probabilities.append(
-                    p
-                )
-
-            else:
-
-                aligned = np.zeros(
-                    (
-                        len(X),
-                        len(self._classes),
-                    ),
-                    dtype=np.float64,
-                )
-
-                for j, cls in enumerate(
-                    model_classes
+                if not (
+                    0
+                    <= encoded_cls
+                    < n_classes
                 ):
+                    raise RuntimeError(
+                        f"Unexpected encoded class "
+                        f"{encoded_cls}. "
+                        f"Expected 0..{n_classes - 1}."
+                    )
 
-                    target_idx = np.where(
-                        self._classes == cls
-                    )[0][0]
+                aligned[
+                    :,
+                    encoded_cls,
+                ] = p[:, j]
 
-                    aligned[
-                        :,
-                        target_idx,
-                    ] = p[:, j]
-
-                probabilities.append(
-                    aligned
-                )
+            probabilities.append(
+                aligned
+            )
 
         return np.mean(
             probabilities,
@@ -1162,10 +1554,7 @@ class XGBoostAdapter(BaseTFM):
         )
 
 
-    def predict(
-        self,
-        X,
-    ):
+    def predict(self, X):
 
         if self.classification:
 
@@ -1173,24 +1562,27 @@ class XGBoostAdapter(BaseTFM):
                 self.predict_proba(X)
             )
 
-            indices = np.argmax(
-                probabilities,
-                axis=1,
+            encoded_predictions = (
+                np.argmax(
+                    probabilities,
+                    axis=1,
+                )
             )
 
-            return self._classes[
-                indices
-            ]
+            # Convert 0..K-1 back to original labels.
+            return (
+                self._label_encoder
+                .inverse_transform(
+                    encoded_predictions
+                )
+            )
 
-        X = self._transform_X(
-            X
-        )
+        X = self._transform_X(X)
 
         predictions = [
             np.asarray(
                 model.predict(X)
             ).reshape(-1)
-
             for model in self._models
         ]
 
@@ -1200,117 +1592,95 @@ class XGBoostAdapter(BaseTFM):
         )
 
 
-# ============================================================
-# CatBoost
-# ============================================================
 
 class CatBoostAdapter(BaseTFM):
-
     def __init__(
         self,
         task,
         device,
         seed,
-
-        # ----------------------------------------------------
-        # Tuning
-        # ----------------------------------------------------
-
+        # HPO
         tune=True,
-        n_trials=20,
+        n_trials=None,
         validation_fraction=0.20,
-        tune_max_rows=200_000,
+        tune_max_rows=None,
         tuning_metric=None,
         search_space=None,
-
-        # ----------------------------------------------------
-        # Ensemble
-        # ----------------------------------------------------
-
+        # Early stopping
+        max_iterations=5000,
+        early_stopping_rounds=100,
+        calibrate_rounds=True,
+        round_calibration_fraction=0.20,
+        round_calibration_max_rows=None,
+        # Final ensemble
         n_ensemble=5,
-        ensemble_top_k=3,
-
+        ensemble_top_k=None,
         **kwargs,
     ):
-
         super().__init__(
             task=task,
             device=device,
             seed=seed,
         )
 
-        self.classification = (
-            _is_classification(task)
-        )
+        self.classification = _is_classification(task)
+        self.device_type = _device_type(device)
 
-        self.device_type = (
-            _device_type(device)
-        )
+        self.tune = bool(tune)
+        self.n_trials = n_trials
+        self.validation_fraction = float(validation_fraction)
+        self.tune_max_rows = tune_max_rows
+        self.tuning_metric = tuning_metric
+        self.search_space = search_space
 
-        self.tune = tune
-        self.n_trials = int(n_trials)
+        self.max_iterations = int(max_iterations)
+        self.early_stopping_rounds = int(early_stopping_rounds)
+        self.n_ensemble = int(n_ensemble)
 
-        self.validation_fraction = (
-            float(validation_fraction)
-        )
+        if self.max_iterations < 1:
+            raise ValueError("max_iterations must be >= 1.")
+        if self.early_stopping_rounds < 1:
+            raise ValueError("early_stopping_rounds must be >= 1.")
+        if self.n_ensemble < 1:
+            raise ValueError("n_ensemble must be >= 1.")
 
-        self.tune_max_rows = (
-            tune_max_rows
-        )
+        self.base_model_kwargs = dict(kwargs)
 
-        if tuning_metric is None:
-
-            if self.classification:
-                tuning_metric = (
-                    "balanced_accuracy"
-                )
-            else:
-                tuning_metric = "rmse"
-
-        self.tuning_metric = (
-            tuning_metric
-        )
-
-        self.search_space = (
-            search_space
-            if search_space is not None
-            else DEFAULT_CATBOOST_SEARCH_SPACE
-        )
-
-        self.n_ensemble = int(
-            n_ensemble
-        )
-
-        self.ensemble_top_k = int(
-            ensemble_top_k
-        )
-
-        self.base_model_kwargs = dict(
-            kwargs
-        )
-
+        self._feature_kinds = {}
         self._cat_features = []
 
         self._models = []
         self._model = None
-
+        self._label_encoder = None
         self._classes = None
 
         self.best_params_ = None
+        self.best_iteration_ = None
+        self.best_iterations_ = None
+        self.best_validation_score_ = None
         self.tuning_results_ = []
         self.ensemble_params_ = []
+        self.study_ = None
+        self.hpo_n_rows_ = None
+        self.hpo_n_trials_ = None
+        self.calibrate_rounds = bool(
+            calibrate_rounds
+        )
+
+        self.round_calibration_fraction = float(
+            round_calibration_fraction
+        )
+
+        self.round_calibration_max_rows = (
+            round_calibration_max_rows
+        )
+
+        self.stage1_best_iterations_ = None
+        self.round_calibration_n_rows_ = None
+        self.round_calibration_score_ = None
 
 
-    # ========================================================
-    # Model creation
-    # ========================================================
-
-    def _make_model(
-        self,
-        params,
-        seed,
-    ):
-
+    def _make_model(self, params, seed):
         from catboost import (
             CatBoostClassifier,
             CatBoostRegressor,
@@ -1323,158 +1693,498 @@ class CatBoostAdapter(BaseTFM):
         }
 
         if self.device_type == "cuda":
-
-            common_kwargs[
-                "task_type"
-            ] = "GPU"
-
-            # No devices="cuda".
-            #
-            # Under Slurm CUDA_VISIBLE_DEVICES normally
-            # exposes the allocated GPU to the process.
-
+            common_kwargs["task_type"] = "GPU"
         else:
+            common_kwargs["task_type"] = "CPU"
 
-            common_kwargs[
-                "task_type"
-            ] = "CPU"
-
-        common_kwargs.update(
-            self.base_model_kwargs
-        )
-
-        common_kwargs.update(
-            params
-        )
+        common_kwargs.update(self.base_model_kwargs)
+        common_kwargs.update(params)
 
         if self.classification:
+            return CatBoostClassifier(**common_kwargs)
 
-            return CatBoostClassifier(
-                **common_kwargs
-            )
+        return CatBoostRegressor(**common_kwargs)
 
-        return CatBoostRegressor(
-            **common_kwargs
+    @staticmethod
+    def _as_cat_string(series):
+        values = _to_string(series)
+        values = pd.Series(
+            values,
+            index=series.index,
+            dtype=object,
         )
+        values = values.where(
+            pd.notna(values),
+            "__MISSING__",
+        )
+        return values.astype(str)
 
-
-    # ========================================================
-    # Preprocessing
-    # ========================================================
-
-    def _prepare_X(
-        self,
-        X,
-    ):
-
+    def _fit_preprocessor(self, X):
         X = _as_dataframe(X)
 
-        cat_features = []
+        self._feature_kinds = {}
+        self._cat_features = []
 
         for col in X.columns:
-
             col_name = str(col)
 
-            # ------------------------------------------------
-            # TALENT numeric
-            # ------------------------------------------------
-
-            if col_name.startswith(
-                "num_"
-            ):
-
-                X[col] = _to_numeric(
-                    X[col]
-                )
-
-            # ------------------------------------------------
-            # TALENT categorical
-            # ------------------------------------------------
-
-            elif col_name.startswith(
-                "cat_"
-            ):
-
-                cat_features.append(
-                    col
-                )
-
-                X[col] = (
-                    _to_string(X[col])
-                    .fillna(
-                        "__MISSING__"
-                    )
-                    .astype(str)
-                )
-
-            # ------------------------------------------------
-            # Fallback
-            # ------------------------------------------------
-
+            if col_name.startswith("num_"):
+                kind = "numeric"
+            elif col_name.startswith("cat_"):
+                kind = "categorical"
             else:
-
-                # TALENT numeric arrays can occasionally
-                # arrive with dtype=object, so first test
-                # whether every nonmissing value is numeric.
                 numeric = pd.to_numeric(
                     X[col],
                     errors="coerce",
                 )
 
-                original_nonmissing = (
-                    X[col]
-                    .notna()
-                    .sum()
+                original_nonmissing = int(
+                    X[col].notna().sum()
+                )
+                numeric_nonmissing = int(
+                    numeric.notna().sum()
                 )
 
-                numeric_nonmissing = (
-                    numeric
-                    .notna()
-                    .sum()
-                )
-
-                if (
-                    numeric_nonmissing
+                kind = (
+                    "numeric"
+                    if numeric_nonmissing
                     == original_nonmissing
-                ):
+                    else "categorical"
+                )
 
-                    X[col] = (
-                        numeric.astype(
-                            np.float32
-                        )
-                    )
+            self._feature_kinds[col] = kind
 
-                else:
+            if kind == "categorical":
+                self._cat_features.append(col)
+                X[col] = self._as_cat_string(
+                    X[col]
+                )
+            else:
+                X[col] = _to_numeric(X[col])
 
-                    cat_features.append(
-                        col
-                    )
+        return X, list(self._cat_features)
 
-                    X[col] = (
-                        _to_string(X[col])
-                        .fillna(
-                            "__MISSING__"
-                        )
-                        .astype(str)
-                    )
+    def _transform_X(self, X):
+        X = _as_dataframe(X)
 
-        return (
-            X,
-            cat_features,
+        if not self._feature_kinds:
+            raise RuntimeError(
+                "CatBoost preprocessor is not fitted."
+            )
+
+        missing_cols = [
+            col
+            for col in self._feature_kinds
+            if col not in X.columns
+        ]
+        if missing_cols:
+            raise ValueError(
+                f"Missing columns at transform time: {missing_cols}"
+            )
+
+        X = X[list(self._feature_kinds.keys())].copy()
+
+        for col, kind in self._feature_kinds.items():
+            if kind == "categorical":
+                X[col] = self._as_cat_string(
+                    X[col]
+                )
+            else:
+                X[col] = _to_numeric(X[col])
+
+        return X
+
+    def _tune_parameters(self, X, y):
+        y = _as_1d_y(y)
+
+        tune_max_rows, n_trials = _resolve_hpo_budget(
+            n_rows=len(y),
+            n_trials=self.n_trials,
+            tune_max_rows=self.tune_max_rows,
         )
 
+        self.hpo_n_rows_ = tune_max_rows
+        self.hpo_n_trials_ = n_trials
 
-    # ========================================================
-    # HPO
-    # ========================================================
+        print(
+            f"[CatBoost HPO] rows={tune_max_rows:,}, "
+            f"trials={n_trials}"
+        )
 
-    def _tune_parameters(
+        tuning_metric = self.tuning_metric
+        if tuning_metric is None:
+            if self.classification:
+                tuning_metric = _default_classification_metric(y)
+            else:
+                tuning_metric = "rmse"
+
+        self.tuning_metric = tuning_metric
+
+        print(
+            f"[CatBoost HPO] metric={tuning_metric}"
+        )
+
+        train_idx, val_idx = _make_tuning_indices(
+            y=y,
+            classification=self.classification,
+            validation_fraction=self.validation_fraction,
+            tune_max_rows=tune_max_rows,
+            seed=self.seed,
+        )
+
+        X_raw = _as_dataframe(X)
+        X_train_raw = X_raw.iloc[train_idx].copy()
+        X_val_raw = X_raw.iloc[val_idx].copy()
+
+        y_train = y[train_idx]
+        y_val = y[val_idx]
+
+        X_train, cat_features = self._fit_preprocessor(
+            X_train_raw
+        )
+        X_val = self._transform_X(
+            X_val_raw
+        )
+
+        eval_metric = _catboost_eval_metric(
+            classification=self.classification,
+            tuning_metric=tuning_metric,
+            y_train=y_train,
+        )
+
+        trial_results = []
+
+        def objective(trial):
+            if self.search_space is None:
+                params = _suggest_catboost_params(trial)
+            else:
+                params = _sample_custom_space(
+                    trial,
+                    self.search_space,
+                )
+
+            model_params = dict(params)
+            model_params["iterations"] = self.max_iterations
+            model_params["eval_metric"] = eval_metric
+
+            model = self._make_model(
+                params=model_params,
+                seed=self.seed,
+            )
+
+            try:
+                model.fit(
+                    X_train,
+                    y_train,
+                    cat_features=cat_features,
+                    eval_set=(X_val, y_val),
+                    early_stopping_rounds=(
+                        self.early_stopping_rounds
+                    ),
+                    use_best_model=True,
+                    verbose=False,
+                )
+
+                raw_score, utility = _score_candidate(
+                    model=model,
+                    X=X_val,
+                    y=y_val,
+                    classification=self.classification,
+                    metric=tuning_metric,
+                )
+
+                best_iteration = model.get_best_iteration()
+
+                if (
+                    best_iteration is None
+                    or best_iteration < 0
+                ):
+                    best_iterations = self.max_iterations
+                else:
+                    best_iterations = int(best_iteration) + 1
+
+                trial.set_user_attr(
+                    "raw_score",
+                    float(raw_score),
+                )
+                trial.set_user_attr(
+                    "best_iterations",
+                    int(best_iterations),
+                )
+
+                trial_results.append({
+                    "trial": trial.number,
+                    "params": dict(params),
+                    "validation_score": float(raw_score),
+                    "utility": float(utility),
+                    "best_iterations": int(best_iterations),
+                    "status": "success",
+                })
+
+                return float(utility)
+
+            except Exception as exc:
+                trial_results.append({
+                    "trial": trial.number,
+                    "params": dict(params),
+                    "validation_score": None,
+                    "utility": float("-inf"),
+                    "best_iterations": None,
+                    "status": "failed",
+                    "error": repr(exc),
+                })
+                raise optuna.TrialPruned(str(exc))
+
+            finally:
+                del model
+                gc.collect()
+
+        sampler = optuna.samplers.TPESampler(
+            seed=self.seed,
+        )
+
+        study = optuna.create_study(
+            direction="maximize",
+            sampler=sampler,
+        )
+
+        self.study_ = study
+
+        study.optimize(
+            objective,
+            n_trials=n_trials,
+            show_progress_bar=False,
+        )
+
+        completed = [
+            trial
+            for trial in study.trials
+            if trial.state == optuna.trial.TrialState.COMPLETE
+        ]
+
+        if not completed:
+            raise RuntimeError(
+                "All CatBoost tuning trials failed."
+            )
+
+        best_trial = study.best_trial
+        best_params = dict(
+            best_trial.params
+        )
+
+        stage1_best_iterations = int(
+            best_trial.user_attrs[
+                "best_iterations"
+            ]
+        )
+
+        self.stage1_best_iterations_ = (
+            stage1_best_iterations
+        )
+
+        self.best_validation_score_ = float(
+            best_trial.user_attrs[
+                "raw_score"
+            ]
+        )
+
+        self.tuning_results_ = (
+            trial_results
+        )
+
+        print(
+            f"[CatBoost HPO Stage 1] "
+            f"best score="
+            f"{self.best_validation_score_:.6f}"
+        )
+
+        print(
+            f"[CatBoost HPO Stage 1] "
+            f"temporary best iterations="
+            f"{stage1_best_iterations}"
+        )
+
+        print(
+            f"[CatBoost HPO Stage 1] "
+            f"best structural params="
+            f"{best_params}"
+        )
+
+        return best_params
+
+
+    def fit(self, X, y):
+
+        y = _as_1d_y(y)
+
+        if self.classification:
+
+            self._label_encoder = (
+                LabelEncoder()
+            )
+
+            y_model = (
+                self._label_encoder
+                .fit_transform(y)
+            )
+
+            self._classes = np.asarray(
+                self._label_encoder.classes_
+            )
+
+            print(
+                f"[CatBoost] "
+                f"{len(self._classes)} classes"
+            )
+
+            print(
+                "[CatBoost] original classes:",
+                self._classes,
+            )
+
+            print(
+                "[CatBoost] encoded classes:",
+                np.unique(y_model),
+            )
+
+        else:
+
+            y_model = y
+
+        if self.tune:
+
+            structural_config = (
+                self._tune_parameters(
+                    X,
+                    y_model,
+                )
+            )
+
+
+            if self.calibrate_rounds:
+
+                best_config = (
+                    self._calibrate_iterations(
+                        X,
+                        y_model,
+                        structural_config,
+                    )
+                )
+
+            else:
+
+                best_config = dict(
+                    structural_config
+                )
+
+                best_config[
+                    "iterations"
+                ] = int(
+                    self.stage1_best_iterations_
+                )
+
+                self.best_iterations_ = int(
+                    self.stage1_best_iterations_
+                )
+
+                self.best_iteration_ = (
+                    self.best_iterations_
+                    - 1
+                )
+
+                self.best_params_ = dict(
+                    best_config
+                )
+
+        else:
+
+            best_config = {}
+            self.best_params_ = {}
+
+
+        X_full, cat_features = (
+            self._fit_preprocessor(
+                X
+            )
+        )
+
+        self._cat_features = (
+            cat_features
+        )
+
+        self._models = []
+        self.ensemble_params_ = []
+
+        for ensemble_id in range(
+            self.n_ensemble
+        ):
+
+            ensemble_seed = (
+                self.seed
+                + 10_000
+                + ensemble_id
+            )
+
+            model = self._make_model(
+                params=best_config,
+                seed=ensemble_seed,
+            )
+
+            model.fit(
+                X_full,
+                y_model,
+                cat_features=(
+                    self._cat_features
+                ),
+                verbose=False,
+            )
+
+            self._models.append(
+                model
+            )
+
+            self.ensemble_params_.append({
+                "seed": ensemble_seed,
+                "params": dict(
+                    best_config
+                ),
+            })
+
+        self._model = (
+            self._models[0]
+        )
+
+        return self
+
+    def _calibrate_iterations(
         self,
         X,
         y,
+        structural_params,
     ):
-
         y = _as_1d_y(y)
+
+        calibration_max_rows = (
+            self.round_calibration_max_rows
+        )
+
+        if calibration_max_rows is None:
+            calibration_max_rows = len(y)
+
+        calibration_max_rows = min(
+            int(calibration_max_rows),
+            len(y),
+        )
+
+        self.round_calibration_n_rows_ = (
+            calibration_max_rows
+        )
+
+        print(
+            f"[CatBoost HPO Stage 2] "
+            f"Calibrating iterations on "
+            f"{calibration_max_rows:,} rows"
+        )
 
         train_idx, val_idx = (
             _make_tuning_indices(
@@ -1483,24 +2193,28 @@ class CatBoostAdapter(BaseTFM):
                     self.classification
                 ),
                 validation_fraction=(
-                    self.validation_fraction
+                    self.round_calibration_fraction
                 ),
                 tune_max_rows=(
-                    self.tune_max_rows
+                    calibration_max_rows
                 ),
-                seed=self.seed,
+                seed=self.seed + 1,
             )
         )
 
         X_raw = _as_dataframe(X)
 
-        X_train_raw = X_raw.iloc[
-            train_idx
-        ].copy()
+        X_train_raw = (
+            X_raw.iloc[
+                train_idx
+            ].copy()
+        )
 
-        X_val_raw = X_raw.iloc[
-            val_idx
-        ].copy()
+        X_val_raw = (
+            X_raw.iloc[
+                val_idx
+            ].copy()
+        )
 
         y_train = y[
             train_idx
@@ -1510,284 +2224,185 @@ class CatBoostAdapter(BaseTFM):
             val_idx
         ]
 
+        print(
+            f"[CatBoost HPO Stage 2] "
+            f"train={len(y_train):,}, "
+            f"val={len(y_val):,}"
+        )
+
         X_train, cat_features = (
-            self._prepare_X(
+            self._fit_preprocessor(
                 X_train_raw
             )
         )
 
-        X_val, _ = (
-            self._prepare_X(
+        X_val = (
+            self._transform_X(
                 X_val_raw
             )
         )
 
-        sampler = ParameterSampler(
-            self.search_space,
-            n_iter=self.n_trials,
-            random_state=self.seed,
-        )
-
-        trial_results = []
-
-        for trial_id, params in enumerate(
-            sampler
-        ):
-
-            model = self._make_model(
-                params=params,
-                seed=(
-                    self.seed
-                    + trial_id
+        eval_metric = (
+            _catboost_eval_metric(
+                classification=(
+                    self.classification
                 ),
+                tuning_metric=(
+                    self.tuning_metric
+                ),
+                y_train=y_train,
             )
-
-            try:
-
-                model.fit(
-                    X_train,
-                    y_train,
-                    cat_features=(
-                        cat_features
-                    ),
-                )
-
-                raw_score, utility = (
-                    _score_candidate(
-                        model=model,
-                        X=X_val,
-                        y=y_val,
-                        classification=(
-                            self.classification
-                        ),
-                        metric=(
-                            self.tuning_metric
-                        ),
-                    )
-                )
-
-                trial_results.append({
-                    "trial": trial_id,
-                    "params": dict(params),
-                    "validation_score": (
-                        float(raw_score)
-                    ),
-                    "utility": (
-                        float(utility)
-                    ),
-                    "status": "success",
-                })
-
-            except Exception as exc:
-
-                trial_results.append({
-                    "trial": trial_id,
-                    "params": dict(params),
-                    "validation_score": None,
-                    "utility": (
-                        float("-inf")
-                    ),
-                    "status": "failed",
-                    "error": repr(exc),
-                })
-
-            finally:
-
-                del model
-
-        valid_trials = [
-            trial
-            for trial in trial_results
-            if trial["status"] == "success"
-        ]
-
-        if not valid_trials:
-
-            raise RuntimeError(
-                "All CatBoost tuning trials failed."
-            )
-
-        valid_trials.sort(
-            key=lambda x: x["utility"],
-            reverse=True,
         )
 
-        self.tuning_results_ = (
-            trial_results
+        model_params = dict(
+            structural_params
         )
 
-        self.best_params_ = dict(
-            valid_trials[0]["params"]
+        model_params[
+            "iterations"
+        ] = self.max_iterations
+
+        model_params[
+            "eval_metric"
+        ] = eval_metric
+
+        model = self._make_model(
+            params=model_params,
+            seed=self.seed,
         )
 
-        # ----------------------------------------------------
-        # Top unique hyperparameter configs
-        # ----------------------------------------------------
+        try:
 
-        top_configs = []
+            model.fit(
+                X_train,
+                y_train,
 
-        seen = set()
+                cat_features=(
+                    cat_features
+                ),
 
-        for trial in valid_trials:
+                eval_set=(
+                    X_val,
+                    y_val,
+                ),
 
-            params = dict(
-                trial["params"]
+                early_stopping_rounds=(
+                    self.early_stopping_rounds
+                ),
+
+                use_best_model=True,
+
+                verbose=False,
             )
 
-            signature = json.dumps(
-                params,
-                sort_keys=True,
-                default=str,
-            )
-
-            if signature in seen:
-                continue
-
-            seen.add(signature)
-
-            top_configs.append(
-                params
+            best_iteration = (
+                model.get_best_iteration()
             )
 
             if (
-                len(top_configs)
-                >= self.ensemble_top_k
+                best_iteration is None
+                or best_iteration < 0
             ):
-                break
 
-        return top_configs
+                best_iterations = (
+                    self.max_iterations
+                )
 
+            else:
 
-    # ========================================================
-    # Fit
-    # ========================================================
+                best_iterations = (
+                    int(best_iteration)
+                    + 1
+                )
 
-    def fit(
-        self,
-        X,
-        y,
-    ):
-
-        y = _as_1d_y(y)
-
-        # ----------------------------------------------------
-        # Tune
-        # ----------------------------------------------------
-
-        if self.tune:
-
-            top_configs = (
-                self._tune_parameters(
-                    X,
-                    y,
+            raw_score, _ = (
+                _score_candidate(
+                    model=model,
+                    X=X_val,
+                    y=y_val,
+                    classification=(
+                        self.classification
+                    ),
+                    metric=(
+                        self.tuning_metric
+                    ),
                 )
             )
 
-        else:
+            self.round_calibration_score_ = (
+                float(raw_score)
+            )
 
-            top_configs = [
-                {}
-            ]
+        finally:
 
-            self.best_params_ = {}
+            del model
+            gc.collect()
 
-        # ----------------------------------------------------
-        # Full training preprocessing
-        # ----------------------------------------------------
-
-        X_full, cat_features = (
-            self._prepare_X(X)
+        final_params = dict(
+            structural_params
         )
 
-        self._cat_features = (
-            cat_features
+        final_params[
+            "iterations"
+        ] = int(
+            best_iterations
         )
 
-        # ----------------------------------------------------
-        # Fit ensemble
-        # ----------------------------------------------------
-
-        self._models = []
-        self.ensemble_params_ = []
-
-        for ensemble_id in range(
-            self.n_ensemble
-        ):
-
-            config = dict(
-                top_configs[
-                    ensemble_id
-                    % len(top_configs)
-                ]
-            )
-
-            ensemble_seed = (
-                self.seed
-                + 10_000
-                + ensemble_id
-            )
-
-            model = self._make_model(
-                params=config,
-                seed=ensemble_seed,
-            )
-
-            model.fit(
-                X_full,
-                y,
-                cat_features=(
-                    self._cat_features
-                ),
-            )
-
-            self._models.append(
-                model
-            )
-
-            self.ensemble_params_.append({
-                "seed": ensemble_seed,
-                "params": config,
-            })
-
-        self._model = (
-            self._models[0]
+        self.best_iterations_ = int(
+            best_iterations
         )
 
-        if self.classification:
+        self.best_iteration_ = (
+            int(best_iterations)
+            - 1
+        )
 
-            self._classes = np.asarray(
-                self._model.classes_
-            )
+        self.best_params_ = dict(
+            final_params
+        )
 
-        return self
+        print(
+            f"[CatBoost HPO Stage 2] "
+            f"score="
+            f"{self.round_calibration_score_:.6f}"
+        )
 
+        print(
+            f"[CatBoost HPO Stage 2] "
+            f"best iterations="
+            f"{best_iterations}"
+        )
 
-    # ========================================================
-    # Prediction
-    # ========================================================
+        print(
+            f"[CatBoost HPO] "
+            f"final params="
+            f"{final_params}"
+        )
+
+        return final_params
 
     @property
     def classes_(self):
-
         if not self.classification:
             return None
-
         return self._classes
-
-
-    def predict_proba(
-        self,
-        X,
-    ):
+    def predict_proba(self, X):
 
         if not self.classification:
             return None
 
-        X, _ = self._prepare_X(
-            X
-        )
+        if self._label_encoder is None:
+            raise RuntimeError(
+                "Label encoder is not fitted."
+            )
+
+        X = self._transform_X(X)
 
         probabilities = []
+
+        n_classes = len(
+            self._classes
+        )
 
         for model in self._models:
 
@@ -1795,45 +2410,42 @@ class CatBoostAdapter(BaseTFM):
                 model.predict_proba(X)
             )
 
-            model_classes = np.asarray(
-                model.classes_
+            encoded_classes = np.asarray(
+                model.classes_,
+                dtype=int,
             )
 
-            if np.array_equal(
-                model_classes,
-                self._classes,
+            aligned = np.zeros(
+                (
+                    len(X),
+                    n_classes,
+                ),
+                dtype=np.float64,
+            )
+
+            for j, encoded_cls in enumerate(
+                encoded_classes
             ):
 
-                probabilities.append(
-                    p
-                )
-
-            else:
-
-                aligned = np.zeros(
-                    (
-                        len(X),
-                        len(self._classes),
-                    ),
-                    dtype=np.float64,
-                )
-
-                for j, cls in enumerate(
-                    model_classes
+                if not (
+                    0
+                    <= encoded_cls
+                    < n_classes
                 ):
+                    raise RuntimeError(
+                        f"Unexpected encoded class "
+                        f"{encoded_cls}. "
+                        f"Expected 0..{n_classes - 1}."
+                    )
 
-                    target_idx = np.where(
-                        self._classes == cls
-                    )[0][0]
+                aligned[
+                    :,
+                    encoded_cls,
+                ] = p[:, j]
 
-                    aligned[
-                        :,
-                        target_idx,
-                    ] = p[:, j]
-
-                probabilities.append(
-                    aligned
-                )
+            probabilities.append(
+                aligned
+            )
 
         return np.mean(
             probabilities,
@@ -1841,10 +2453,7 @@ class CatBoostAdapter(BaseTFM):
         )
 
 
-    def predict(
-        self,
-        X,
-    ):
+    def predict(self, X):
 
         if self.classification:
 
@@ -1852,24 +2461,26 @@ class CatBoostAdapter(BaseTFM):
                 self.predict_proba(X)
             )
 
-            indices = np.argmax(
-                probabilities,
-                axis=1,
+            encoded_predictions = (
+                np.argmax(
+                    probabilities,
+                    axis=1,
+                )
             )
 
-            return self._classes[
-                indices
-            ]
+            return (
+                self._label_encoder
+                .inverse_transform(
+                    encoded_predictions
+                )
+            )
 
-        X, _ = self._prepare_X(
-            X
-        )
+        X = self._transform_X(X)
 
         predictions = [
             np.asarray(
                 model.predict(X)
             ).reshape(-1)
-
             for model in self._models
         ]
 

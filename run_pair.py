@@ -16,24 +16,23 @@ DATA_ROOT = "./data/datasets-talent-large"
 RESULT_ROOT = Path("./results")
 SAMPLING_ROOT = Path("./data/sampling_idx")
 SAMPLE_SEED = 42
-
+'''
+    N ≤ 200K        → all rows / 100 trials
+    200K–1M         → 500K / 75 trials
+    1M–5M           → 750K / 60 trials
+    >5M             → 1M / 50 trials
+'''
 MODEL_KWARGS = {
     "xgboost": {
         "tune": True,
-        "n_trials": 30,
-        "tune_max_rows": 500_000,
-        "validation_fraction": 0.20,
-        "n_ensemble": 10,
-        "ensemble_top_k": 3,
+        "n_ensemble": 5,
+        "calibrate_rounds": True,
     },
 
     "catboost": {
         "tune": True,
-        "n_trials": 30,
-        "tune_max_rows": 500_000,
-        "validation_fraction": 0.20,
-        "n_ensemble": 10,
-        "ensemble_top_k": 3,
+        "n_ensemble": 5,
+        "calibrate_rounds": True,
     },
 
     "tabdpt_v1.3": {
@@ -41,9 +40,6 @@ MODEL_KWARGS = {
         "n_ensembles": 1,
     },
 
-    "tabpfn_v3": {
-        "n_estimators": 8,
-    },
 }
 
 def apply_fixed_train_sample(
@@ -140,16 +136,14 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        "--manifest",
+        "--dataset",
+        required=True,
+    )
+    parser.add_argument(
+        "--model",
         required=True,
     )
 
-    parser.add_argument(
-        "--index",
-        type=int,
-        required=True,
-    )
-    
     parser.add_argument(
         "--sample-size",
         type=int,
@@ -166,23 +160,21 @@ def main():
         type=int,
         default=None,
     )
+    parser.add_argument(
+        "--include_val",
+        action='store_true',
+    )
 
     args = parser.parse_args()
 
-    jobs = pd.read_csv(args.manifest)
 
-    job = jobs.iloc[args.index]
-
-    dataset_name = job["dataset"]
-    model_name = job["model"]
+    dataset_name = args.dataset
+    model_name = args.model
     sample_size = args.sample_size
 
     print("=" * 100)
     print(f"Dataset : {dataset_name}")
     print(f"Model   : {model_name}")
-    print(f"N       : {job['total_rows']:,}")
-    print(f"N train : {job['train_rows']:,}")
-    print(f"F       : {job['n_features']:,}")
     print("=" * 100)
 
     RESULT_ROOT.mkdir(
@@ -192,21 +184,24 @@ def main():
 
     safe_dataset = dataset_name.replace("/", "_")
 
-    output_file = (
-        RESULT_ROOT
-        / f"{safe_dataset}__{model_name}.json"
+    sample_tag = (
+        "full"
+        if sample_size is None
+        else f"n{sample_size}"
     )
 
-    if output_file.exists():
-        print(
-            f"Result already exists: {output_file}"
+    output_file = (
+        RESULT_ROOT
+        / (
+            f"{safe_dataset}"
+            f"__{model_name}"
+            f"__{sample_tag}.json"
         )
-        return
-
+    )
     output = {
         "dataset": dataset_name,
         "model": model_name,
-        "job_id": int(job["job_id"]),
+        "job_id": 0,
         "status": "failed",
     }
 
@@ -218,7 +213,7 @@ def main():
         data = load_talent_dataset(
             dataset_name,
             root=DATA_ROOT,
-            include_val=False,
+            include_val=args.include_val,
         )
         
         original_train_size = len(data.y_train)
@@ -288,12 +283,40 @@ def main():
         output.update({
             "status": "success",
 
+            "sample_size_requested": (
+                sample_size
+            ),
+
+            "original_train_size": (
+                original_train_size
+            ),
+
+            "n_train": (
+                result.n_train
+            ),
+
+            "n_test": (
+                result.n_test
+            ),
+
+            "n_features": (
+                result.n_features
+            ),
+
+            "task": (
+                result.task
+            ),
+
             "metrics": result.metrics,
 
-            "fit_seconds": result.fit_seconds,
-            "predict_seconds": result.predict_seconds,
+            "fit_seconds":
+                result.fit_seconds,
 
-            "wall_seconds": wall_seconds,
+            "predict_seconds":
+                result.predict_seconds,
+
+            "wall_seconds":
+                wall_seconds,
 
             "peak_gpu_memory_mb":
                 result.peak_gpu_memory_mb,

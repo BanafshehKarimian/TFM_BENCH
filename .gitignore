@@ -3,3 +3,6 @@ logs/
 *.pyc
 *.ipynb
 latext_tables/
+results/
+figures/
+latex_tables/

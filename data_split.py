@@ -11,10 +11,6 @@ import pandas as pd
 from tfmbench.datasets.talent import load_talent_dataset
 
 
-# ============================================================
-# Regression binning
-# ============================================================
-
 def make_regression_bins(
     y: np.ndarray,
     n_bins: int = 20,
@@ -66,9 +62,6 @@ def make_regression_bins(
     return bins
 
 
-# ============================================================
-# Create one stratified ordering
-# ============================================================
 
 def make_stratified_order(
     strata: np.ndarray,
@@ -151,10 +144,6 @@ def make_stratified_order(
     return order
 
 
-# ============================================================
-# Nested sample generation
-# ============================================================
-
 def make_nested_indices(
     y: np.ndarray,
     task: str,
@@ -210,9 +199,6 @@ def make_nested_indices(
             f"{n_train:,} training rows."
         )
 
-    # --------------------------------------------------------
-    # Define strata
-    # --------------------------------------------------------
 
     if task == "classification":
 
@@ -241,18 +227,11 @@ def make_nested_indices(
             f"Unsupported task: {task}"
         )
 
-    # --------------------------------------------------------
-    # One global ordering
-    # --------------------------------------------------------
 
     order = make_stratified_order(
         strata=strata,
         seed=seed,
     )
-
-    # --------------------------------------------------------
-    # Nested prefixes
-    # --------------------------------------------------------
 
     samples = {}
 
@@ -265,10 +244,6 @@ def make_nested_indices(
 
     return samples
 
-
-# ============================================================
-# Diagnostics
-# ============================================================
 
 def print_classification_distribution(
     y: np.ndarray,
@@ -345,9 +320,6 @@ def print_regression_distribution(
     )
 
 
-# ============================================================
-# Verify nesting
-# ============================================================
 
 def verify_nested(
     indices_by_size: dict[int, np.ndarray],
@@ -393,9 +365,6 @@ def verify_nested(
         )
 
 
-# ============================================================
-# Save indices + metadata
-# ============================================================
 
 def save_samples(
     data,
@@ -422,9 +391,6 @@ def save_samples(
         exist_ok=True,
     )
 
-    # --------------------------------------------------------
-    # Save indices
-    # --------------------------------------------------------
 
     for size, indices in (
         indices_by_size.items()
@@ -446,9 +412,6 @@ def save_samples(
             f"{path}"
         )
 
-    # --------------------------------------------------------
-    # Metadata
-    # --------------------------------------------------------
 
     metadata = {
         "dataset": data.name,
@@ -553,10 +516,6 @@ def save_samples(
     return dataset_dir
 
 
-# ============================================================
-# Main
-# ============================================================
-
 def main():
 
     parser = argparse.ArgumentParser(
@@ -566,9 +525,6 @@ def main():
         )
     )
 
-    # --------------------------------------------------------
-    # Dataset
-    # --------------------------------------------------------
 
     parser.add_argument(
         "--data-root",
@@ -589,9 +545,6 @@ def main():
         ),
     )
 
-    # --------------------------------------------------------
-    # Sampling
-    # --------------------------------------------------------
 
     parser.add_argument(
         "--sample-sizes",
@@ -627,10 +580,6 @@ def main():
         ),
     )
 
-    # --------------------------------------------------------
-    # Output
-    # --------------------------------------------------------
-
     parser.add_argument(
         "--output-root",
         type=str,
@@ -643,9 +592,6 @@ def main():
 
     args = parser.parse_args()
 
-    # ========================================================
-    # Load dataset
-    # ========================================================
 
     print("=" * 70)
     print("Loading dataset")
@@ -676,10 +622,6 @@ def main():
         f"Features:  {data.X_train.shape[1]}"
     )
 
-    # ========================================================
-    # Generate subsets
-    # ========================================================
-
     print()
     print("=" * 70)
     print("Creating nested samples")
@@ -693,10 +635,6 @@ def main():
         regression_bins=args.regression_bins,
     )
 
-    # ========================================================
-    # Verify nesting
-    # ========================================================
-
     print()
     print("=" * 70)
     print("Verifying nesting")
@@ -705,10 +643,6 @@ def main():
     verify_nested(
         indices_by_size
     )
-
-    # ========================================================
-    # Diagnostics
-    # ========================================================
 
     print()
     print("=" * 70)
@@ -746,9 +680,6 @@ def main():
                 size=size,
             )
 
-    # ========================================================
-    # Save
-    # ========================================================
 
     print()
     print("=" * 70)
